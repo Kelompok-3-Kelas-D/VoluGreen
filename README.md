@@ -1,9 +1,6 @@
 # 🌱 VoluGreen
 
-**Kelas:** D <br>
-**Kelompok:** 3
-
-## 👥 Anggota Kelompok
+## 👥 Anggota Kelompok 3 Kelas D
 
 | Nama | NPM |
 | --- | --- |
@@ -15,7 +12,7 @@
 
 ---
 
-## 1. 💡 Ide Aplikasi
+## 💡 Ide Aplikasi
 
 ### Nama Aplikasi
 **VoluGreen**
@@ -41,13 +38,13 @@ Melalui VoluGreen:
 
 ---
 
-## 2. 🔗 Repositori Git
+## 🔗 Repositori Git
 
 **Link repositori:** [github.com/Kelompok-3-Kelas-D/VoluGreen](https://github.com/Kelompok-3-Kelas-D/VoluGreen)
 
 ---
 
-## 3. 🧩 Daftar Modul (Rencana)
+## 🧩 Daftar Modul (Rencana)
 
 - **Modul 1:** Autentikasi & Manajemen Profil
 - **Modul 2:** Eksplorasi Kegiatan & Pemetaan
@@ -57,7 +54,7 @@ Melalui VoluGreen:
 
 ---
 
-## 4. Public API / Mock API yang Akan Dipakai
+## 🌐 Public API / Mock API yang Akan Dipakai
 
 | API | Fungsi di Aplikasi |
 | --- | --- |
@@ -67,7 +64,7 @@ Melalui VoluGreen:
 
 ---
 
-## 5. 🎭 Peran Pengguna (User Roles)
+## 🎭 Peran Pengguna (User Roles)
 
 | User | Roles |
 | --- | --- |
@@ -77,7 +74,7 @@ Melalui VoluGreen:
 
 ---
 
-## 6. 🧑‍💻 Pembagian Modul per Anggota
+## 🧑‍💻 Pembagian Modul per Anggota
 
 | Anggota | Modul | Tanggung Jawab Utama |
 | --- | --- | --- |
