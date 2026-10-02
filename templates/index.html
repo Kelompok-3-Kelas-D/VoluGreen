@@ -1,0 +1,333 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VoluGreen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<!-- ================= 2a · Beranda / Masuk dengan hero ================= -->
+<section class="screen" id="s-beranda" data-route="beranda" hidden>
+  <div class="bg"><img class="photo" data-photo alt=""></div>
+  <header class="top wrap">
+    <a class="logo on-dark" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
+    <nav aria-label="Navigasi utama">
+      <a href="#beranda">Beranda</a>
+      <a href="#" data-soon="Jelajahi kegiatan dikerjakan di Modul 2">Jelajahi kegiatan</a>
+      <a href="#" data-soon="Daftar penyelenggara dikerjakan di Modul 5">Penyelenggara</a>
+      <a href="#" data-soon="Halaman Tentang kami belum dibuat">Tentang kami</a>
+      <a class="btn btn-outline-light" href="#daftar">Daftar</a>
+    </nav>
+    <button class="menu-btn" type="button" aria-label="Buka menu" data-drawer="d-beranda"><span data-i="menu"></span></button>
+    <div class="mobile-drawer" id="d-beranda" hidden>
+      <a href="#beranda">Beranda</a><a href="#masuk">Masuk</a><a href="#daftar">Daftar</a>
+      <a href="#" data-soon="Jelajahi kegiatan dikerjakan di Modul 2">Jelajahi kegiatan</a>
+    </div>
+  </header>
+  <div class="hero wrap">
+    <div>
+      <span class="pill-dark"><span data-i="sprout"></span>Ayo jaga lingkungan</span>
+      <h1>Aksi kecil hari ini, <em>bumi lebih hijau</em> esok.</h1>
+      <p class="lede">Temukan aksi bersih lingkungan, urban farming, dan penanaman pohon dari komunitas terverifikasi di kotamu.</p>
+      <div class="crowd">
+        <div class="faces"><span style="background:var(--yellow-soft)">NP</span><span style="background:var(--mint-2)">RA</span><span style="background:var(--white)">MS</span></div>
+        <div><strong>12rb+</strong><small>relawan sudah bergabung</small></div>
+      </div>
+    </div>
+    <form class="card-login" id="f-quick" novalidate>
+      <div><h2>Masuk ke akunmu</h2><p class="sub">Satu akun untuk relawan dan penyelenggara.</p></div>
+      <div class="field"><label for="q-email">Email</label>
+        <div class="control"><span data-i="mail"></span><input id="q-email" type="email" autocomplete="email" placeholder="nama@email.com" value="micguel.katili@gmail.com"></div>
+        <span class="err" data-err="q-email"></span></div>
+      <div class="field"><label for="q-pass">Kata sandi</label>
+        <div class="control"><span data-i="lock"></span><input id="q-pass" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter" value="hijaulestari"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="q-pass"><span data-i="eye"></span></button></div>
+        <span class="err" data-err="q-pass"></span></div>
+      <div class="row-between">
+        <label class="check"><input id="q-remember" type="checkbox" checked><span class="box" data-i="check"></span>Ingat saya</label>
+        <a class="link-strong" href="#" data-soon="Tautan atur ulang kata sandi dikirim ke emailmu">Lupa kata sandi?</a>
+      </div>
+      <button class="cta block" type="submit">Masuk<span class="arrow" data-i="arrow"></span></button>
+      <p class="foot-note">Belum punya akun? <a href="#daftar">Daftar sekarang</a></p>
+    </form>
+  </div>
+  <p class="legal wrap">© 2026 VoluGreen · Kelompok 3 Kelas D</p>
+</section>
+
+<!-- ================= 2b · Masuk dengan pilihan peran ================= -->
+<section class="screen" id="s-masuk" data-route="masuk" hidden>
+  <div class="auth-col">
+    <a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
+    <form class="inner" id="f-login" novalidate>
+      <span class="eyebrow"><span data-i="sprout"></span>Selamat datang kembali</span>
+      <h1>Masuk dan lanjutkan <span class="hl">aksimu</span></h1>
+      <div class="field"><span class="label" id="lbl-role">Masuk sebagai</span>
+        <div class="seg" role="tablist" aria-labelledby="lbl-role" id="login-role">
+          <button type="button" role="tab" aria-selected="true" data-role="relawan"><span data-i="heart"></span>Relawan</button>
+          <button type="button" role="tab" aria-selected="false" data-role="penyelenggara"><span data-i="building"></span>Penyelenggara</button>
+          <button type="button" role="tab" aria-selected="false" data-role="admin"><span data-i="shield"></span>Admin</button>
+        </div></div>
+      <div class="field"><label for="l-email">Email</label>
+        <div class="control"><span data-i="mail"></span><input id="l-email" type="email" autocomplete="email" placeholder="Masukkan email"></div>
+        <span class="err" data-err="l-email"></span></div>
+      <div class="field"><label for="l-pass">Kata sandi</label>
+        <div class="control"><span data-i="lock"></span><input id="l-pass" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="l-pass"><span data-i="eye"></span></button></div>
+        <span class="err" data-err="l-pass"></span></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:-8px"><a class="link-strong" href="#" data-soon="Tautan atur ulang kata sandi dikirim ke emailmu">Lupa kata sandi?</a></div>
+      <button class="cta block" type="submit"><span id="login-cta">Masuk sebagai Relawan</span><span class="arrow" data-i="arrow"></span></button>
+      <p style="font-size:14.5px;color:var(--muted)">Belum punya akun? <a class="link-strong" href="#daftar" style="text-decoration:underline">Daftar sekarang</a></p>
+    </form>
+  </div>
+  <div class="panel" aria-hidden="true">
+    <div class="dots" style="--dot:rgba(255,255,255,.25);left:32px;bottom:32px;width:150px;height:150px"></div>
+    <div class="p1"><img class="photo" data-photo alt=""></div>
+    <div class="p2"><div><img class="photo" data-photo alt=""></div></div>
+    <div class="badge-float badge-yellow b1"><big>120+</big><span>komunitas<br>terverifikasi</span></div>
+    <div class="badge-float badge-dark b2"><span class="round" data-i="award"></span>Lacak jam kontribusi<br>dan dampak aksimu</div>
+  </div>
+</section>
+
+<!-- ================= 2c · Daftar ================= -->
+<section class="screen" id="s-daftar" data-route="daftar" hidden>
+  <header class="plain-top wrap">
+    <a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
+    <div style="display:flex;align-items:center;gap:14px"><span class="muted" id="has-acc">Sudah punya akun?</span><a class="btn btn-ghost" href="#masuk">Masuk</a></div>
+  </header>
+  <div class="reg wrap">
+    <div class="collage" aria-hidden="true">
+      <div class="dots" style="left:-6px;bottom:0;width:150px;height:150px"></div>
+      <div class="c1"><img class="photo" data-photo alt=""></div>
+      <div class="c2"><div><img class="photo" data-photo alt=""></div></div>
+      <div class="badge-float badge-yellow gratis"><big>Gratis</big><span id="gratis-sub">untuk semua relawan</span></div>
+      <div class="badge-float badge-dark verif"><span class="round" data-i="shield"></span>Setiap penyelenggara<br>diverifikasi admin</div>
+    </div>
+    <form class="reg-form" id="f-reg" novalidate>
+      <span class="eyebrow"><span data-i="sprout"></span>Bergabung dengan VoluGreen</span>
+      <h1>Buat akun dan mulai <span class="hl">beraksi</span></h1>
+      <div class="seg" role="tablist" aria-label="Jenis akun" id="reg-role">
+        <button type="button" role="tab" aria-selected="true" data-role="relawan"><span data-i="heart"></span>Saya relawan</button>
+        <button type="button" role="tab" aria-selected="false" data-role="penyelenggara"><span data-i="building"></span>Saya penyelenggara</button>
+      </div>
+      <ul class="ticks" id="reg-ticks"></ul>
+      <div class="grid2">
+        <div class="field"><label for="r-name" id="r-name-lbl">Nama lengkap</label>
+          <div class="control"><input id="r-name" autocomplete="name" placeholder="Nama sesuai KTM/KTP"></div><span class="err" data-err="r-name"></span></div>
+        <div class="field"><label for="r-email">Email</label>
+          <div class="control"><input id="r-email" type="email" autocomplete="email" placeholder="nama@email.com"></div><span class="err" data-err="r-email"></span></div>
+        <div class="field"><label for="r-phone">Nomor HP</label>
+          <div class="control"><input id="r-phone" type="tel" autocomplete="tel" placeholder="+62 8xx xxxx xxxx"></div><span class="err" data-err="r-phone"></span></div>
+        <div class="field" data-only="relawan"><label for="r-city">Kota domisili</label>
+          <div class="control"><span data-i="pin"></span><input id="r-city" autocomplete="address-level2" placeholder="Contoh: Depok, Jawa Barat"></div><span class="err" data-err="r-city"></span></div>
+        <div class="field" data-only="penyelenggara" hidden><label for="r-type">Jenis organisasi</label>
+          <div class="control"><span data-i="building"></span><select id="r-type"><option>Bank sampah</option><option>Komunitas lingkungan</option><option>Kebun komunitas</option><option>Organisasi sosial</option><option>Kampus</option></select><span data-i="chev" style="color:var(--muted)"></span></div></div>
+        <div class="field"><label for="r-pass">Kata sandi</label>
+          <div class="control"><input id="r-pass" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="r-pass"><span data-i="eye"></span></button></div>
+          <div class="strength" id="r-strength" data-lv="0" aria-live="polite"><i></i><i></i><i></i><b></b></div><span class="err" data-err="r-pass"></span></div>
+        <div class="field"><label for="r-pass2">Konfirmasi kata sandi</label>
+          <div class="control"><input id="r-pass2" type="password" autocomplete="new-password" placeholder="Ulangi kata sandi"><span id="r-match" data-i="check" style="color:var(--accent);font-size:18px" hidden></span></div><span class="err" data-err="r-pass2"></span></div>
+      </div>
+      <label class="check"><input id="r-terms" type="checkbox"><span class="box" data-i="check"></span><span>Saya menyetujui <a href="#" data-soon="Dokumen Syarat &amp; Ketentuan belum dibuat" style="font-weight:800">Syarat &amp; Ketentuan</a> dan <a href="#" data-soon="Dokumen Kebijakan Privasi belum dibuat" style="font-weight:800">Kebijakan Privasi</a>.</span></label>
+      <span class="err" data-err="r-terms"></span>
+      <div><button class="cta inline" type="submit">Buat akun<span class="arrow" data-i="arrow"></span></button></div>
+    </form>
+  </div>
+</section>
+
+<!-- ================= 2d · Profil relawan ================= -->
+<section class="screen app" id="s-profil" data-route="profil" hidden>
+  <header class="app-top" data-shell="relawan" data-active="profil"></header>
+  <main class="app-main wrap">
+    <div class="banner">
+      <div class="cover"><img class="photo" data-photo alt=""></div>
+      <div class="who">
+        <div class="avatar"><div data-bind="avatar"></div></div>
+        <div style="min-width:0">
+          <span class="chip yellow sm">Relawan</span>
+          <h1 data-bind="name"></h1>
+          <div class="meta"><span><span data-i="pin"></span><span data-bind="city"></span></span><span><span data-i="cal"></span><span data-bind="joined"></span></span></div>
+        </div>
+      </div>
+      <a class="btn btn-ghost edit" href="#edit-profil"><span data-i="pencil"></span>Edit profil</a>
+    </div>
+    <div class="card stats">
+      <div class="stat"><span class="ring" data-i="calcheck"></span><div><b>12</b><small>Kegiatan selesai</small></div></div>
+      <div class="stat"><span class="ring" data-i="clock"></span><div><b>38</b><small>Jam kontribusi</small></div></div>
+      <div class="stat"><span class="ring" data-i="sprout"></span><div><b>26</b><small>Pohon ditanam</small></div></div>
+      <div class="stat"><span class="ring" data-i="trash"></span><div><b>18 kg</b><small>Sampah terkumpul</small></div></div>
+      <a class="link-strong more" href="#" data-soon="Riwayat partisipasi dikerjakan di Modul 3" style="display:inline-flex;align-items:center;gap:6px">Lihat riwayat<span data-i="arrow"></span></a>
+    </div>
+    <div class="two">
+      <div class="card" style="display:flex;flex-direction:column;gap:14px">
+        <h3>Tentang saya</h3>
+        <p style="max-width:40em;color:var(--ink-2);line-height:1.65" data-bind="bio"></p>
+        <span class="label-sm" style="margin-top:4px">Minat kategori</span>
+        <div class="tags" data-bind="interests"></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:16px">
+        <h3>Informasi akun</h3>
+        <dl class="kv" style="margin:0">
+          <div><dt>Email</dt><dd data-bind="email"></dd></div>
+          <div><dt>Status email</dt><dd><span class="chip ok sm">Terverifikasi</span></dd></div>
+          <div><dt>Nomor HP</dt><dd data-bind="phone"></dd></div>
+          <div><dt>Peran</dt><dd>Relawan</dd></div>
+        </dl>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+          <a class="btn btn-ghost" href="#keamanan"><span data-i="lock"></span>Ubah kata sandi</a>
+          <button class="btn btn-text" type="button" data-logout><span data-i="logout"></span>Keluar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ================= 2e · Profil penyelenggara ================= -->
+<section class="screen app" id="s-organisasi" data-route="organisasi" hidden>
+  <header class="app-top" data-shell="penyelenggara" data-active="organisasi"></header>
+  <main class="app-main wrap">
+    <div class="notice" role="status">
+      <span class="round" data-i="clock"></span>
+      <div class="txt"><b>Profil organisasimu sedang ditinjau admin</b><span>Lowongan kegiatan bisa dipublikasikan setelah organisasi terverifikasi. Biasanya 1–3 hari kerja.</span></div>
+      <ol class="steps" aria-label="Status verifikasi">
+        <li class="done"><span class="dot" data-i="check"></span>Akun dibuat</li>
+        <li class="done"><span class="dot" data-i="check"></span>Dokumen dikirim</li>
+        <li class="now" aria-current="step"><span class="dot"></span>Ditinjau admin</li>
+        <li><span class="dot"></span>Terverifikasi</li>
+      </ol>
+    </div>
+    <div class="org">
+      <div class="dots" style="--dot:rgba(255,255,255,.2);right:28px;top:22px;width:130px;height:70px"></div>
+      <div class="org-head">
+        <div class="org-logo"><div data-i="recycle"></div></div>
+        <div class="t">
+          <h2 data-bind="org-name">Bank Sampah Hijau Lestari</h2>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13.5px">
+            <span class="chip dark" data-bind="org-type">Bank sampah</span>
+            <span class="chip yellow">Menunggu verifikasi</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.88)"><span data-i="pin"></span>Jl. Margonda Raya No. 12, Pondok Cina, Beji, Depok</span>
+          </div>
+        </div>
+        <a class="cta inline" href="#" data-soon="Form edit profil organisasi menyusul di iterasi berikutnya">Edit profil<span class="arrow" data-i="arrow"></span></a>
+      </div>
+      <div class="three">
+        <div class="card">
+          <h3>Tentang organisasi</h3>
+          <p style="font-size:14.5px;color:var(--ink-2);line-height:1.6">Bank sampah berbasis warga yang mengelola tabungan sampah anorganik dan edukasi pemilahan sampah untuk delapan RW di Kecamatan Beji.</p>
+          <ul class="contact">
+            <li><span class="r" data-i="user"></span>Rina Kusuma · Penanggung jawab</li>
+            <li><span class="r" data-i="mail"></span><span data-bind="org-email">halo@hijaulestari.id</span></li>
+            <li><span class="r" data-i="phone"></span>+62 21 7788 1234</li>
+            <li><span class="r" data-i="at"></span>@banksampahhijaulestari</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="row-between"><h3>Lokasi</h3><span class="muted-sm">OpenStreetMap</span></div>
+          <div class="map" aria-label="Pratinjau peta lokasi organisasi">
+            <span class="road" style="left:-10%;right:-10%;top:30%;height:10px;transform:rotate(-8deg)"></span>
+            <span class="road" style="left:58%;top:-10%;bottom:-10%;width:9px;transform:rotate(12deg)"></span>
+            <span class="road" style="left:-10%;right:30%;top:72%;height:6px;transform:rotate(4deg)"></span>
+            <span class="pin"></span>
+            <span class="tag">peta · Leaflet.js</span>
+          </div>
+          <p style="font-size:14.5px">Jl. Margonda Raya No. 12, Pondok Cina, Beji, Depok</p>
+          <p class="muted-sm">Koordinat via Nominatim: <span style="font-variant-numeric:tabular-nums">-6.3683, 106.8320</span></p>
+        </div>
+        <div class="card">
+          <h3>Dokumen verifikasi</h3>
+          <ul class="doc-list" id="docs"></ul>
+          <div style="margin-top:auto">
+            <label class="btn btn-ghost" for="doc-file" style="cursor:pointer"><span data-i="upload"></span>Unggah dokumen</label>
+            <input class="sr" type="file" id="doc-file" accept=".pdf,.jpg,.jpeg,.png,.zip">
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ================= 2f · Edit profil ================= -->
+<section class="screen app" id="s-edit" data-route="edit-profil keamanan notifikasi" hidden>
+  <header class="app-top" data-shell="relawan" data-active="profil"></header>
+  <main class="app-main wrap">
+    <div class="edit-grid">
+      <div class="card" style="padding:28px 32px 32px">
+        <div class="edit-head">
+          <div><span class="eyebrow"><span data-i="sprout"></span>Pengaturan akun</span><h1>Edit profil</h1></div>
+          <div class="seg" role="tablist" aria-label="Bagian pengaturan" id="edit-tabs">
+            <button type="button" role="tab" aria-selected="true" data-tab="edit-profil"><span data-i="user"></span>Profil</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="keamanan"><span data-i="lock"></span>Keamanan akun</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="notifikasi"><span data-i="bell"></span>Notifikasi</button>
+          </div>
+        </div>
+
+        <form class="tab-pane" id="p-edit-profil" novalidate>
+          <div class="grid2">
+            <div class="field"><label for="e-name">Nama lengkap</label><div class="control"><input id="e-name" autocomplete="name"></div><span class="err" data-err="e-name"></span></div>
+            <div class="field"><label for="e-phone">Nomor HP</label><div class="control"><input id="e-phone" type="tel" autocomplete="tel"></div></div>
+            <div class="field"><label for="e-email">Email</label><div class="control is-locked"><input id="e-email" type="email" readonly><span class="chip ok sm">Terverifikasi</span></div></div>
+            <div class="field" style="position:relative"><label for="e-city">Kota domisili</label>
+              <div class="control"><span data-i="pin"></span><input id="e-city" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="city-list" aria-autocomplete="list"></div>
+              <ul class="suggest" id="city-list" role="listbox" hidden></ul></div>
+          </div>
+          <div class="field"><label for="e-bio">Bio singkat</label><div class="control" style="align-items:flex-start"><textarea id="e-bio" maxlength="240" rows="3"></textarea></div><span class="muted-sm" id="bio-count" style="text-align:right"></span></div>
+          <div class="field"><span class="label">Minat kategori kegiatan</span><div class="tags" id="e-interests"></div></div>
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:4px">
+            <button class="cta inline" type="submit">Simpan perubahan<span class="arrow" data-i="arrow"></span></button>
+            <button class="btn btn-text" type="button" id="e-cancel" style="color:var(--muted)">Batal</button>
+          </div>
+        </form>
+
+        <form class="tab-pane" id="p-keamanan" novalidate hidden>
+          <div class="field"><label for="k-old">Kata sandi saat ini</label><div class="control"><span data-i="lock"></span><input id="k-old" type="password" autocomplete="current-password"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="k-old"><span data-i="eye"></span></button></div><span class="err" data-err="k-old"></span></div>
+          <div class="grid2">
+            <div class="field"><label for="k-new">Kata sandi baru</label><div class="control"><input id="k-new" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="k-new"><span data-i="eye"></span></button></div>
+              <div class="strength" id="k-strength" data-lv="0"><i></i><i></i><i></i><b></b></div><span class="err" data-err="k-new"></span></div>
+            <div class="field"><label for="k-new2">Ulangi kata sandi baru</label><div class="control"><input id="k-new2" type="password" autocomplete="new-password"></div><span class="err" data-err="k-new2"></span></div>
+          </div>
+          <div><button class="cta inline" type="submit">Perbarui kata sandi<span class="arrow" data-i="arrow"></span></button></div>
+        </form>
+
+        <div class="tab-pane" id="p-notifikasi" hidden>
+          <div class="switch-row"><div><b>Pengingat kegiatan</b><span>Email H-1 sebelum kegiatan yang kamu ikuti.</span></div><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Pengingat kegiatan"></button></div>
+          <div class="switch-row"><div><b>Status pendaftaran</b><span>Saat penyelenggara menerima atau menolak pendaftaranmu.</span></div><button class="switch" type="button" role="switch" aria-checked="true" aria-label="Status pendaftaran"></button></div>
+          <div class="switch-row"><div><b>Kegiatan baru di kotamu</b><span>Ringkasan mingguan dari kategori yang kamu minati.</span></div><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Kegiatan baru di kotamu"></button></div>
+          <div class="switch-row"><div><b>Prakiraan cuaca hari H</b><span>Dari Open-Meteo untuk kegiatan luar ruangan.</span></div><button class="switch" type="button" role="switch" aria-checked="false" aria-label="Prakiraan cuaca hari H"></button></div>
+        </div>
+      </div>
+
+      <aside style="display:flex;flex-direction:column;gap:20px">
+        <div class="preview">
+          <div class="dots" style="--dot:rgba(255,255,255,.18);right:-10px;top:-10px;width:120px;height:120px"></div>
+          <span class="over" style="position:relative">Pratinjau profil publik</span>
+          <div style="position:relative;width:96px">
+            <div class="avatar"><div data-bind="avatar"></div></div>
+            <label class="cam" for="avatar-file" title="Ganti foto profil"><span data-i="camera"></span><span class="sr">Ganti foto profil</span></label>
+            <input class="sr" type="file" id="avatar-file" accept="image/png,image/jpeg">
+          </div>
+          <div style="position:relative">
+            <h2 data-bind="name-live"></h2>
+            <span style="display:inline-flex;align-items:center;gap:6px;font-size:14.5px;color:rgba(255,255,255,.85);margin-top:6px"><span data-i="pin"></span><span data-bind="city-live"></span></span>
+          </div>
+          <div class="tags" data-bind="interests-live" style="position:relative"></div>
+          <div class="mini-stats"><div><b>12</b><small>kegiatan</small></div><div><b>38</b><small>jam</small></div><div><b>26</b><small>pohon</small></div></div>
+          <span style="font-size:12.5px;color:rgba(255,255,255,.72)">Foto: JPG atau PNG, maksimal 2 MB.</span>
+        </div>
+        <div class="tip"><span class="round" data-i="pin"></span><span>Kota domisili dipakai untuk menampilkan kegiatan terdekat di peta Beranda. Lokasi dicari lewat OpenStreetMap (Nominatim).</span></div>
+      </aside>
+    </div>
+  </main>
+</section>
+
+<div class="jump">
+  <ul id="jump-list" hidden></ul>
+  <button type="button" id="jump-btn" aria-expanded="false" aria-controls="jump-list"><span data-i="layers"></span>Layar<span class="jl"> Modul 1</span></button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span data-i="check"></span><span id="toast-msg"></span></div>
+
+<script>window.VOLUGREEN_PHOTO_URL = "{% static 'assets/photo.jpg' %}";</script>
+<script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
