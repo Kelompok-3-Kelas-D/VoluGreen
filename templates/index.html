@@ -18,18 +18,59 @@
     <a class="logo on-dark" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
     <nav aria-label="Navigasi utama">
       <a href="#beranda">Beranda</a>
-      <a href="#" data-soon="Jelajahi kegiatan dikerjakan di Modul 2">Jelajahi kegiatan</a>
-      <a href="#" data-soon="Daftar penyelenggara dikerjakan di Modul 5">Penyelenggara</a>
-      <a href="#" data-soon="Halaman Tentang kami belum dibuat">Tentang kami</a>
-      <a class="btn btn-outline-light" href="#daftar">Daftar</a>
+      <a href="#" data-soon="Jelajahi kegiatan dikerjakan di Modul 2">
+        Jelajahi kegiatan
+      </a>
+      <a href="#" data-soon="Daftar penyelenggara dikerjakan di Modul 5">
+        Penyelenggara
+      </a>
+      <a href="#" data-soon="Halaman Tentang kami belum dibuat">
+        Tentang kami
+      </a>
+
+      {% if user.is_authenticated %}
+        <span style="color: white;">
+          Halo, {{ user.username }}
+        </span>
+        <a
+          class="btn btn-outline-light"
+          href="{% url 'main:logout' %}"
+        >
+          Keluar
+        </a>
+      {% else %}
+        <a href="{% url 'main:login' %}">
+          Masuk
+        </a>
+        <a
+          class="btn btn-outline-light"
+          href="{% url 'main:register' %}"
+        >
+          Daftar
+        </a>
+      {% endif %}
     </nav>
     <button class="menu-btn" type="button" aria-label="Buka menu" data-drawer="d-beranda"><span data-i="menu"></span></button>
     <div class="mobile-drawer" id="d-beranda" hidden>
-      <a href="#beranda">Beranda</a><a href="#masuk">Masuk</a><a href="#daftar">Daftar</a>
-      <a href="#" data-soon="Jelajahi kegiatan dikerjakan di Modul 2">Jelajahi kegiatan</a>
+      <a href="#beranda">Beranda</a>
+
+      {% if user.is_authenticated %}
+        <span>Halo, {{ user.username }}</span>
+        <a href="{% url 'main:logout' %}">Keluar</a>
+      {% else %}
+        <a href="{% url 'main:login' %}">Masuk</a>
+        <a href="{% url 'main:register' %}">Daftar</a>
+      {% endif %}
+
+      <a
+        href="#"
+        data-soon="Jelajahi kegiatan dikerjakan di Modul 2"
+      >
+        Jelajahi kegiatan
+      </a>
     </div>
   </header>
-  <div class="hero wrap">
+  <div class="hero hero-intro wrap">
     <div>
       <span class="pill-dark"><span data-i="sprout"></span>Ayo jaga lingkungan</span>
       <h1>Aksi kecil hari ini, <em>bumi lebih hijau</em> esok.</h1>
@@ -39,21 +80,6 @@
         <div><strong>12rb+</strong><small>relawan sudah bergabung</small></div>
       </div>
     </div>
-    <form class="card-login" id="f-quick" novalidate>
-      <div><h2>Masuk ke akunmu</h2><p class="sub">Satu akun untuk relawan dan penyelenggara.</p></div>
-      <div class="field"><label for="q-email">Email</label>
-        <div class="control"><span data-i="mail"></span><input id="q-email" type="email" autocomplete="email" placeholder="nama@email.com" value="micguel.katili@gmail.com"></div>
-        <span class="err" data-err="q-email"></span></div>
-      <div class="field"><label for="q-pass">Kata sandi</label>
-        <div class="control"><span data-i="lock"></span><input id="q-pass" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter" value="hijaulestari"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="q-pass"><span data-i="eye"></span></button></div>
-        <span class="err" data-err="q-pass"></span></div>
-      <div class="row-between">
-        <label class="check"><input id="q-remember" type="checkbox" checked><span class="box" data-i="check"></span>Ingat saya</label>
-        <a class="link-strong" href="#" data-soon="Tautan atur ulang kata sandi dikirim ke emailmu">Lupa kata sandi?</a>
-      </div>
-      <button class="cta block" type="submit">Masuk<span class="arrow" data-i="arrow"></span></button>
-      <p class="foot-note">Belum punya akun? <a href="#daftar">Daftar sekarang</a></p>
-    </form>
   </div>
   <p class="legal wrap">© 2026 VoluGreen · Kelompok 3 Kelas D</p>
 </section>
@@ -62,24 +88,25 @@
 <section class="screen" id="s-masuk" data-route="masuk" hidden>
   <div class="auth-col">
     <a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
-    <form class="inner" id="f-login" novalidate>
+    <form class="inner" id="f-login" method="post" action="{% url 'main:login' %}" novalidate>
+      {% csrf_token %}
+      <input id="spa-login-role" type="hidden" name="role" value="volunteer">
       <span class="eyebrow"><span data-i="sprout"></span>Selamat datang kembali</span>
       <h1>Masuk dan lanjutkan <span class="hl">aksimu</span></h1>
       <div class="field"><span class="label" id="lbl-role">Masuk sebagai</span>
         <div class="seg" role="tablist" aria-labelledby="lbl-role" id="login-role">
           <button type="button" role="tab" aria-selected="true" data-role="relawan"><span data-i="heart"></span>Relawan</button>
           <button type="button" role="tab" aria-selected="false" data-role="penyelenggara"><span data-i="building"></span>Penyelenggara</button>
-          <button type="button" role="tab" aria-selected="false" data-role="admin"><span data-i="shield"></span>Admin</button>
         </div></div>
       <div class="field"><label for="l-email">Email</label>
-        <div class="control"><span data-i="mail"></span><input id="l-email" type="email" autocomplete="email" placeholder="Masukkan email"></div>
+        <div class="control"><span data-i="mail"></span><input id="l-email" name="username" type="email" autocomplete="email" placeholder="Masukkan email"></div>
         <span class="err" data-err="l-email"></span></div>
       <div class="field"><label for="l-pass">Kata sandi</label>
-        <div class="control"><span data-i="lock"></span><input id="l-pass" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="l-pass"><span data-i="eye"></span></button></div>
+        <div class="control"><span data-i="lock"></span><input id="l-pass" name="password" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="l-pass"><span data-i="eye"></span></button></div>
         <span class="err" data-err="l-pass"></span></div>
       <div style="display:flex;justify-content:flex-end;margin-top:-8px"><a class="link-strong" href="#" data-soon="Tautan atur ulang kata sandi dikirim ke emailmu">Lupa kata sandi?</a></div>
       <button class="cta block" type="submit"><span id="login-cta">Masuk sebagai Relawan</span><span class="arrow" data-i="arrow"></span></button>
-      <p style="font-size:14.5px;color:var(--muted)">Belum punya akun? <a class="link-strong" href="#daftar" style="text-decoration:underline">Daftar sekarang</a></p>
+      <p style="font-size:14.5px;color:var(--muted)">Belum punya akun? <a class="link-strong" href="{% url 'main:register' %}" style="text-decoration:underline">Daftar sekarang</a></p>
     </form>
   </div>
   <div class="panel" aria-hidden="true">
@@ -95,7 +122,7 @@
 <section class="screen" id="s-daftar" data-route="daftar" hidden>
   <header class="plain-top wrap">
     <a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
-    <div style="display:flex;align-items:center;gap:14px"><span class="muted" id="has-acc">Sudah punya akun?</span><a class="btn btn-ghost" href="#masuk">Masuk</a></div>
+    <div style="display:flex;align-items:center;gap:14px"><span class="muted" id="has-acc">Sudah punya akun?</span><a class="btn btn-ghost" href="{% url 'main:login' %}">Masuk</a></div>
   </header>
   <div class="reg wrap">
     <div class="collage" aria-hidden="true">
@@ -105,7 +132,9 @@
       <div class="badge-float badge-yellow gratis"><big>Gratis</big><span id="gratis-sub">untuk semua relawan</span></div>
       <div class="badge-float badge-dark verif"><span class="round" data-i="shield"></span>Setiap penyelenggara<br>diverifikasi admin</div>
     </div>
-    <form class="reg-form" id="f-reg" novalidate>
+    <form class="reg-form" id="f-reg" method="post" action="{% url 'main:register' %}" novalidate>
+      {% csrf_token %}
+      <input id="spa-reg-role" type="hidden" name="role" value="volunteer">
       <span class="eyebrow"><span data-i="sprout"></span>Bergabung dengan VoluGreen</span>
       <h1>Buat akun dan mulai <span class="hl">beraksi</span></h1>
       <div class="seg" role="tablist" aria-label="Jenis akun" id="reg-role">
@@ -115,22 +144,22 @@
       <ul class="ticks" id="reg-ticks"></ul>
       <div class="grid2">
         <div class="field"><label for="r-name" id="r-name-lbl">Nama lengkap</label>
-          <div class="control"><input id="r-name" autocomplete="name" placeholder="Nama sesuai KTM/KTP"></div><span class="err" data-err="r-name"></span></div>
+          <div class="control"><input id="r-name" name="name" autocomplete="name" placeholder="Nama sesuai KTM/KTP"></div><span class="err" data-err="r-name"></span></div>
         <div class="field"><label for="r-email">Email</label>
-          <div class="control"><input id="r-email" type="email" autocomplete="email" placeholder="nama@email.com"></div><span class="err" data-err="r-email"></span></div>
+          <div class="control"><input id="r-email" name="username" type="email" autocomplete="email" placeholder="nama@email.com"></div><span class="err" data-err="r-email"></span></div>
         <div class="field"><label for="r-phone">Nomor HP</label>
-          <div class="control"><input id="r-phone" type="tel" autocomplete="tel" placeholder="+62 8xx xxxx xxxx"></div><span class="err" data-err="r-phone"></span></div>
+          <div class="control"><input id="r-phone" name="phone_number" type="tel" autocomplete="tel" placeholder="+62 8xx xxxx xxxx"></div><span class="err" data-err="r-phone"></span></div>
         <div class="field" data-only="relawan"><label for="r-city">Kota domisili</label>
-          <div class="control"><span data-i="pin"></span><input id="r-city" autocomplete="address-level2" placeholder="Contoh: Depok, Jawa Barat"></div><span class="err" data-err="r-city"></span></div>
+          <div class="control"><span data-i="pin"></span><input id="r-city" name="city" autocomplete="address-level2" placeholder="Contoh: Depok, Jawa Barat"></div><span class="err" data-err="r-city"></span></div>
         <div class="field" data-only="penyelenggara" hidden><label for="r-type">Jenis organisasi</label>
-          <div class="control"><span data-i="building"></span><select id="r-type"><option>Bank sampah</option><option>Komunitas lingkungan</option><option>Kebun komunitas</option><option>Organisasi sosial</option><option>Kampus</option></select><span data-i="chev" style="color:var(--muted)"></span></div></div>
+          <div class="control"><span data-i="building"></span><select id="r-type" name="organization_type"><option value="waste_bank">Bank sampah</option><option value="environmental_community">Komunitas lingkungan</option><option value="community_garden">Kebun komunitas</option><option value="social_organization">Organisasi sosial</option><option value="campus">Kampus</option></select><span data-i="chev" style="color:var(--muted)"></span></div></div>
         <div class="field"><label for="r-pass">Kata sandi</label>
-          <div class="control"><input id="r-pass" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="r-pass"><span data-i="eye"></span></button></div>
+          <div class="control"><input id="r-pass" name="password1" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="r-pass"><span data-i="eye"></span></button></div>
           <div class="strength" id="r-strength" data-lv="0" aria-live="polite"><i></i><i></i><i></i><b></b></div><span class="err" data-err="r-pass"></span></div>
         <div class="field"><label for="r-pass2">Konfirmasi kata sandi</label>
-          <div class="control"><input id="r-pass2" type="password" autocomplete="new-password" placeholder="Ulangi kata sandi"><span id="r-match" data-i="check" style="color:var(--accent);font-size:18px" hidden></span></div><span class="err" data-err="r-pass2"></span></div>
+          <div class="control"><input id="r-pass2" name="password2" type="password" autocomplete="new-password" placeholder="Ulangi kata sandi"><span id="r-match" data-i="check" style="color:var(--accent);font-size:18px" hidden></span></div><span class="err" data-err="r-pass2"></span></div>
       </div>
-      <label class="check"><input id="r-terms" type="checkbox"><span class="box" data-i="check"></span><span>Saya menyetujui <a href="#" data-soon="Dokumen Syarat &amp; Ketentuan belum dibuat" style="font-weight:800">Syarat &amp; Ketentuan</a> dan <a href="#" data-soon="Dokumen Kebijakan Privasi belum dibuat" style="font-weight:800">Kebijakan Privasi</a>.</span></label>
+      <label class="check"><input id="r-terms" name="terms" type="checkbox"><span class="box" data-i="check"></span><span>Saya menyetujui <a href="#" data-soon="Dokumen Syarat &amp; Ketentuan belum dibuat" style="font-weight:800">Syarat &amp; Ketentuan</a> dan <a href="#" data-soon="Dokumen Kebijakan Privasi belum dibuat" style="font-weight:800">Kebijakan Privasi</a>.</span></label>
       <span class="err" data-err="r-terms"></span>
       <div><button class="cta inline" type="submit">Buat akun<span class="arrow" data-i="arrow"></span></button></div>
     </form>
@@ -177,7 +206,9 @@
         </dl>
         <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
           <a class="btn btn-ghost" href="#keamanan"><span data-i="lock"></span>Ubah kata sandi</a>
-          <button class="btn btn-text" type="button" data-logout><span data-i="logout"></span>Keluar</button>
+          <a class="btn btn-text" href="{% url 'main:logout' %}">
+            <span data-i="logout"></span>Keluar
+          </a>
         </div>
       </div>
     </div>
@@ -327,7 +358,11 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span data-i="check"></span><span id="toast-msg"></span></div>
 
-<script>window.VOLUGREEN_PHOTO_URL = "{% static 'assets/photo.jpg' %}";</script>
+<script>
+  window.VOLUGREEN_PHOTO_URL = "{% static 'assets/photo.jpg' %}";
+  window.VOLUGREEN_LOGOUT_URL = "{% url 'main:logout' %}";
+</script>
+{{ profile_data|json_script:"volugreen-profile-data" }}
 <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

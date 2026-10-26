@@ -112,6 +112,7 @@ svg.ic{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-
 .top nav a:hover{color:var(--yellow)}
 .menu-btn{display:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;place-items:center;cursor:pointer;font-size:20px}
 .hero{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,430px);gap:56px;align-items:center;padding-block:40px 56px}
+.hero.hero-intro{grid-template-columns:minmax(0,780px);align-content:center}
 .hero h1{font-size:clamp(40px,5.6vw,66px);font-weight:800;line-height:1.04;margin:22px 0 22px}
 .hero h1 em{font-style:normal;color:var(--yellow)}
 .hero .lede{font-size:17px;line-height:1.7;color:rgba(255,255,255,.84);max-width:30em}

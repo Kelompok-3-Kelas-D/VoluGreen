@@ -38,12 +38,19 @@ const paintIcons=root=>root.querySelectorAll('[data-i]').forEach(el=>{ if(!el.da
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-/* ---------- state (sample account, in memory) ---------- */
+/* ---------- state ---------- */
 const CATS=['Bersih lingkungan','Urban farming','Penanaman pohon','Bank sampah','Daur ulang'];
+const profileDataElement=document.getElementById('volugreen-profile-data');
+const profileData=profileDataElement?JSON.parse(profileDataElement.textContent):null;
 const user={name:'Micguel Katili',email:'micguel.katili@gmail.com',phone:'+62 812 3456 7890',city:'Depok, Jawa Barat',
   bio:'Mahasiswa Ilmu Lingkungan. Suka kegiatan akhir pekan yang hasilnya langsung terlihat, terutama urban farming dan bersih sungai.',
   interests:['Bersih lingkungan','Urban farming','Penanaman pohon'],joined:'Februari 2026',avatar:null};
 const org={name:'Bank Sampah Hijau Lestari',type:'Bank sampah',email:'halo@hijaulestari.id'};
+if(profileData?.role==='volunteer'){
+  Object.assign(user,profileData);
+}else if(profileData?.role==='organizer'){
+  Object.assign(org,{name:profileData.name,type:profileData.organization_type,email:profileData.email});
+}
 const docs=[{n:'Akta pendirian.pdf',s:'ok'},{n:'Surat keterangan domisili.pdf',s:'ok'},{n:'Foto kegiatan sebelumnya.zip',s:'wait'}];
 let draft=null;
 
@@ -95,7 +102,7 @@ $$('[data-shell]').forEach((h,i)=>{
     '<div class="app-tools"><button class="bell" type="button" aria-label="Notifikasi" data-soon="Belum ada notifikasi baru"><span data-i="bell"></span></button>'+
     '<button class="me" type="button" data-kind="'+kind+'" aria-label="Akun"'+(kind==='penyelenggara'?' style="background:var(--yellow-soft)">RK':'>')+'</button>'+
     '<button class="app-menu" type="button" aria-label="Buka menu" data-drawer="'+id+'"><span data-i="menu"></span></button></div>'+
-    '<div class="mobile-drawer" id="'+id+'" hidden>'+links+'<a href="#" data-logout>Keluar</a></div></div>';
+    '<div class="mobile-drawer" id="'+id+'" hidden>'+links+'<a href="'+window.VOLUGREEN_LOGOUT_URL+'">Keluar</a></div></div>';
 });
 $$('.me').forEach(b=>b.addEventListener('click',()=>{ location.hash=b.dataset.kind==='penyelenggara'?'organisasi':'edit-profil'; }));
 
@@ -104,7 +111,6 @@ let tt;
 function toast(msg){ $('#toast-msg').textContent=msg; const t=$('#toast'); t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2600); }
 document.addEventListener('click',e=>{
   const s=e.target.closest('[data-soon]'); if(s){ e.preventDefault(); toast(s.dataset.soon); }
-  const lo=e.target.closest('[data-logout]'); if(lo){ e.preventDefault(); location.hash='masuk'; toast('Kamu sudah keluar. Sampai jumpa di aksi berikutnya.'); }
   const d=e.target.closest('[data-drawer]');
   $$('.mobile-drawer').forEach(m=>{ if(!d||m.id!==d.dataset.drawer) m.hidden=true; });
   if(d){ const m=document.getElementById(d.dataset.drawer); m.hidden=!m.hidden; }
@@ -140,27 +146,15 @@ $$('[data-eye]').forEach(b=>b.addEventListener('click',()=>{
 $$('input').forEach(i=>i.addEventListener('input',()=>setErr(i.id,'')));
 function segment(root,cb){ root.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; $$('button',root).forEach(x=>x.setAttribute('aria-selected',String(x===b))); cb(b); }); }
 
-/* ---------- 2a quick login ---------- */
-$('#f-quick').addEventListener('submit',e=>{
-  e.preventDefault();
-  const em=$('#q-email').value.trim(), pw=$('#q-pass').value;
-  const ok=[setErr('q-email',EMAIL.test(em)?'':'Masukkan email yang valid, contoh nama@email.com.'),setErr('q-pass',pw.length>=8?'':'Kata sandi minimal 8 karakter.')].every(Boolean);
-  if(!ok) return;
-  user.email=em; renderUser(); location.hash='profil'; toast('Berhasil masuk. Selamat datang, '+user.name.split(' ')[0]+'!');
-});
-
 /* ---------- 2b role login ---------- */
 let loginRole='relawan';
-const ROLE_LABEL={relawan:'Relawan',penyelenggara:'Penyelenggara',admin:'Admin'};
+const ROLE_LABEL={relawan:'Relawan',penyelenggara:'Penyelenggara'};
 segment($('#login-role'),b=>{ loginRole=b.dataset.role; $('#login-cta').textContent='Masuk sebagai '+ROLE_LABEL[loginRole]; });
 $('#f-login').addEventListener('submit',e=>{
-  e.preventDefault();
   const em=$('#l-email').value.trim(), pw=$('#l-pass').value;
   const ok=[setErr('l-email',EMAIL.test(em)?'':'Masukkan email yang valid, contoh nama@email.com.'),setErr('l-pass',pw.length>=8?'':'Kata sandi minimal 8 karakter.')].every(Boolean);
-  if(!ok) return;
-  if(loginRole==='admin'){ toast('Panel admin dikerjakan di Modul 5'); return; }
-  if(loginRole==='penyelenggara'){ org.email=em; renderUser(); location.hash='organisasi'; toast('Masuk sebagai penyelenggara'); }
-  else { user.email=em; renderUser(); location.hash='profil'; toast('Berhasil masuk sebagai relawan'); }
+  if(!ok){ e.preventDefault(); return; }
+  $('#spa-login-role').value=loginRole==='penyelenggara'?'organizer':'volunteer';
 });
 
 /* ---------- 2c register ---------- */
@@ -182,7 +176,6 @@ $('#r-pass2').addEventListener('input',checkMatch);
 function checkMatch(){ const a=$('#r-pass').value,b=$('#r-pass2').value; $('#r-match').hidden=!(b&&a===b); }
 $('#r-terms').addEventListener('change',()=>setErr('r-terms',''));
 $('#f-reg').addEventListener('submit',e=>{
-  e.preventDefault();
   const v=id=>document.getElementById(id).value.trim();
   const isOrg=regRole==='penyelenggara';
   const checks=[
@@ -194,9 +187,8 @@ $('#f-reg').addEventListener('submit',e=>{
     setErr('r-pass2',$('#r-pass2').value===$('#r-pass').value&&$('#r-pass2').value?'':'Konfirmasi belum sama dengan kata sandi.'),
     setErr('r-terms',$('#r-terms').checked?'':'Centang persetujuan Syarat & Ketentuan untuk lanjut.')
   ];
-  if(!checks.every(Boolean)) return;
-  if(isOrg){ org.name=v('r-name'); org.email=v('r-email'); org.type=$('#r-type').value; renderUser(); location.hash='organisasi'; toast('Akun penyelenggara dibuat. Dokumen menunggu verifikasi admin.'); }
-  else { Object.assign(user,{name:v('r-name'),email:v('r-email'),phone:v('r-phone'),city:v('r-city'),bio:'',interests:[],joined:'Oktober 2026',avatar:null}); renderUser(); location.hash='edit-profil'; toast('Akun dibuat. Lengkapi profilmu dulu, yuk.'); }
+  if(!checks.every(Boolean)){ e.preventDefault(); return; }
+  $('#spa-reg-role').value=isOrg?'organizer':'volunteer';
 });
 
 /* ---------- 2e documents ---------- */

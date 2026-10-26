@@ -1,0 +1,150 @@
+{% extends "auth_base.html" %}
+{% load static %}
+
+{% block title %}Daftar - VoluGreen{% endblock title %}
+
+{% block content %}
+<section class="screen" id="s-daftar">
+  <header class="plain-top wrap">
+    <a class="logo" href="{% url 'main:home' %}">
+      <span class="logo-mark" data-i="leaf"></span>VoluGreen
+    </a>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="muted" id="has-acc">Sudah punya akun?</span>
+      <a class="btn btn-ghost" href="{% url 'main:login' %}">Masuk</a>
+    </div>
+  </header>
+
+  <div class="reg wrap">
+    <div class="collage" aria-hidden="true">
+      <div class="dots" style="left:-6px;bottom:0;width:150px;height:150px"></div>
+      <div class="c1">
+        <img class="photo" src="{% static 'assets/photo.jpg' %}" alt="">
+      </div>
+      <div class="c2">
+        <div><img class="photo" src="{% static 'assets/photo.jpg' %}" alt=""></div>
+      </div>
+      <div class="badge-float badge-yellow gratis">
+        <big>Gratis</big><span id="gratis-sub">untuk semua relawan</span>
+      </div>
+      <div class="badge-float badge-dark verif">
+        <span class="round" data-i="shield"></span>
+        Setiap penyelenggara<br>diverifikasi admin
+      </div>
+    </div>
+
+    <form
+      class="reg-form"
+      id="f-reg"
+      method="post"
+      action="{% url 'main:register' %}"
+      novalidate
+    >
+      {% csrf_token %}
+      {{ form.role }}
+
+      <span class="eyebrow">
+        <span data-i="sprout"></span>Bergabung dengan VoluGreen
+      </span>
+      <h1>Buat akun dan mulai <span class="hl">beraksi</span></h1>
+
+      <div class="seg" role="tablist" aria-label="Jenis akun" id="reg-role">
+        <button type="button" role="tab" aria-selected="true" data-role="volunteer">
+          <span data-i="heart"></span>Saya relawan
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-role="organizer">
+          <span data-i="building"></span>Saya penyelenggara
+        </button>
+      </div>
+
+      <ul class="ticks" id="reg-ticks"></ul>
+
+      {% for error in form.non_field_errors %}
+        <p class="err">{{ error }}</p>
+      {% endfor %}
+
+      <div class="grid2">
+        <div class="field">
+          <label for="{{ form.name.id_for_label }}" id="r-name-lbl">Nama lengkap</label>
+          <div class="control">{{ form.name }}</div>
+          {% for error in form.name.errors %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.username.id_for_label }}">Email</label>
+          <div class="control">{{ form.username }}</div>
+          {% for error in form.username.errors %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.phone_number.id_for_label }}">Nomor HP</label>
+          <div class="control">{{ form.phone_number }}</div>
+          {% for error in form.phone_number.errors %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="field" data-only="volunteer">
+          <label for="{{ form.city.id_for_label }}">Kota domisili</label>
+          <div class="control">
+            <span data-i="pin"></span>{{ form.city }}
+          </div>
+          {% for error in form.city.errors %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="field" data-only="organizer" hidden>
+          <label for="{{ form.organization_type.id_for_label }}">Jenis organisasi</label>
+          <div class="control">
+            <span data-i="building"></span>{{ form.organization_type }}
+            <span data-i="chev" style="color:var(--muted)"></span>
+          </div>
+          {% for error in form.organization_type.errors %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.password1.id_for_label }}">Kata sandi</label>
+          <div class="control">
+            {{ form.password1 }}
+            <button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="r-pass">
+              <span data-i="eye"></span>
+            </button>
+          </div>
+          <div class="strength" id="r-strength" data-lv="0" aria-live="polite">
+            <i></i><i></i><i></i><b></b>
+          </div>
+          {% for error in form.password1.errors %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.password2.id_for_label }}">Konfirmasi kata sandi</label>
+          <div class="control">
+            {{ form.password2 }}
+            <span id="r-match" data-i="check" style="color:var(--accent);font-size:18px" hidden></span>
+          </div>
+          {% for error in form.password2.errors %}<span class="err">{{ error }}</span>{% endfor %}
+        </div>
+      </div>
+
+      <label class="check">
+        {{ form.terms }}
+        <span class="box" data-i="check"></span>
+        <span>
+          Saya menyetujui
+          <a href="#" data-soon="Dokumen Syarat & Ketentuan belum dibuat" style="font-weight:800">Syarat &amp; Ketentuan</a>
+          dan
+          <a href="#" data-soon="Dokumen Kebijakan Privasi belum dibuat" style="font-weight:800">Kebijakan Privasi</a>.
+        </span>
+      </label>
+      {% for error in form.terms.errors %}<span class="err">{{ error }}</span>{% endfor %}
+
+      <div>
+        <button class="cta inline" type="submit">
+          Buat akun<span class="arrow" data-i="arrow"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock content %}
+
+{% block scripts %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock scripts %}
