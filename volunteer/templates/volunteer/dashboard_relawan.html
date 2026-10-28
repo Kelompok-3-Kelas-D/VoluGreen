@@ -1,0 +1,382 @@
+{% load static %}
+<!-- ===================================================================== -->
+<!-- === START BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ====== -->
+<!-- ===================================================================== -->
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dashboard Relawan · Status &amp; Riwayat Partisipasi — VoluGreen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app-shell.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'volunteer/css/volunteer.css' %}">
+</head>
+<body
+  class="app"
+  id="vg-dashboard-relawan"
+  data-endpoint-status="{% url 'volunteer:lihat_daftar_status_ajax' %}"
+  data-endpoint-riwayat="{% url 'volunteer:lihat_riwayat_partisipasi_ajax' %}"
+  data-endpoint-ubah-template="{% url 'volunteer:ubah_pendaftaran_ajax' '00000000-0000-0000-0000-000000000000' %}"
+  data-endpoint-batal-template="{% url 'volunteer:batalkan_pendaftaran_ajax' '00000000-0000-0000-0000-000000000000' %}"
+>
+  {% csrf_token %}
+
+  <!-- App Top Shell VoluGreen -->
+  <header class="app-top">
+    <div class="wrap" style="position:relative">
+      <a class="logo" href="{% url 'main:home' %}">
+        <span class="logo-mark" data-i="leaf"></span>VoluGreen
+      </a>
+      <span class="chip sm role-chip">Relawan</span>
+      <nav class="app-nav" aria-label="Navigasi aplikasi">
+        <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
+        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">List kegiatan</a>
+        <a href="{% url 'main:profile_settings' %}">Profil</a>
+      </nav>
+      <div class="app-tools">
+        <details class="profile-dropdown">
+          <summary aria-label="Menu profil" title="Menu profil"><span class="me">{{ inisial_relawan }}</span><span class="profile-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="profile-dropdown-menu"><a href="{% url 'main:profile_settings' %}">Lihat Profil</a><a href="{% url 'main:profile_settings' %}#keamanan">Set Password</a><a class="profile-logout" href="{% url 'main:logout' %}">Keluar</a></div>
+        </details>
+        <button class="app-menu" type="button" aria-label="Buka navigasi relawan" aria-expanded="false" aria-controls="volunteer-mobile-menu" data-drawer="volunteer-mobile-menu">☰</button>
+      </div>
+      <div class="mobile-drawer" id="volunteer-mobile-menu" hidden>
+        <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
+        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">List kegiatan</a>
+        <a href="{% url 'main:profile_settings' %}">Profil</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main wrap">
+    <!-- Banner Sapaan Relawan -->
+    <div class="banner">
+      <div class="cover"><img class="photo" src="{% static 'assets/photo.jpg' %}" alt=""></div>
+      <div class="who">
+        <div class="avatar"><div>{{ inisial_relawan }}</div></div>
+        <div style="min-width:0">
+          <span class="chip yellow sm">Modul 3 · Alur Relawan</span>
+          <h1>Halo, {{ nama_relawan }}!</h1>
+          <div class="meta">
+            <span><span data-i="mail"></span><span>{{ email_relawan }}</span></span>
+            <span><span data-i="sprout"></span><span>Pantau pendaftaran &amp; dampak kontribusimu</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bar Metrik 4 Indikator Utama -->
+    <div class="card stats">
+      <div class="stat">
+        <span class="ring" data-i="clock"></span>
+        <div>
+          <b id="stat-menunggu">{{ ringkasan.menunggu }}</b>
+          <small>Menunggu Konfirmasi</small>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="ring" data-i="check"></span>
+        <div>
+          <b id="stat-diterima">{{ ringkasan.diterima }}</b>
+          <small>Pendaftaran Diterima</small>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="ring" data-i="calcheck"></span>
+        <div>
+          <b id="stat-selesai">{{ ringkasan.selesai }}</b>
+          <small>Kegiatan Diselesaikan</small>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="ring" data-i="award"></span>
+        <div>
+          <b id="stat-jam">{{ ringkasan.total_jam_kontribusi }}</b>
+          <small>Total Jam Kontribusi</small>
+        </div>
+      </div>
+      <button class="btn btn-ghost more" type="button" id="btn-muat-ulang">
+        <span data-i="recycle"></span>Segarkan Data
+      </button>
+    </div>
+
+    <!-- Kartu Utama dengan Navigasi Tab (.seg) -->
+    <div class="card" style="display:flex;flex-direction:column;gap:22px">
+      <div class="edit-head" style="margin-bottom:0">
+        <div>
+          <span class="eyebrow"><span data-i="leaf"></span>Aktivitas Relawan</span>
+          <h1 id="judul-tab-aktif" style="font-size:26px">Status Pendaftaran Kegiatan</h1>
+        </div>
+        <div class="seg" role="tablist" aria-label="Navigasi Alur Relawan" id="tab-relawan">
+          <button type="button" role="tab" aria-selected="true" data-tab="status" id="btn-tab-status">
+            <span data-i="cal"></span>Status Pendaftaran
+          </button>
+          <button type="button" role="tab" aria-selected="false" data-tab="riwayat" id="btn-tab-riwayat">
+            <span data-i="award"></span>Riwayat Partisipasi &amp; Dampak
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= TAB 1: STATUS PENDAFTARAN ================= -->
+      <section class="tab-pane" id="panel-status" role="tabpanel" aria-labelledby="btn-tab-status">
+        <div class="vg-toolbar">
+          <div class="control">
+            <span data-i="pin"></span>
+            <input
+              id="filter-q"
+              type="search"
+              placeholder="Cari berdasarkan judul kegiatan, lokasi, atau kota..."
+              aria-label="Cari kegiatan"
+            >
+          </div>
+          <div class="control">
+            <select id="filter-status" aria-label="Filter status pendaftaran">
+              <option value="ALL">Semua Status</option>
+              <option value="PENDING">Menunggu Konfirmasi (PENDING)</option>
+              <option value="ACCEPTED">Diterima (ACCEPTED)</option>
+              <option value="COMPLETED">Selesai Berpartisipasi (COMPLETED)</option>
+              <option value="ABSENT">Tidak Hadir (ABSENT)</option>
+              <option value="CANCELLED">Dibatalkan (CANCELLED)</option>
+              <option value="REJECTED">Ditolak (REJECTED)</option>
+            </select>
+            <span data-i="chev" style="color:var(--muted)"></span>
+          </div>
+          <button class="btn btn-ghost" type="button" id="btn-reset-filter">Reset Filter</button>
+        </div>
+
+        <div class="vg-list" id="list-status-pendaftaran" aria-live="polite">
+          <div class="vg-empty">
+            <span class="round" data-i="clock"></span>
+            <b>Memuat daftar pendaftaranmu...</b>
+            <span>Mohon tunggu sebentar.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: RIWAYAT PARTISIPASI & DAMPAK ================= -->
+      <section class="tab-pane" id="panel-riwayat" role="tabpanel" aria-labelledby="btn-tab-riwayat" hidden>
+        <div class="notice" id="notice-dampak-riwayat">
+          <span class="round" data-i="award"></span>
+          <div class="txt">
+            <b id="riwayat-ringkasan-judul">
+              Total kontribusimu: {{ ringkasan.selesai }} kegiatan selesai · {{ ringkasan.total_jam_kontribusi }} jam kontribusi
+            </b>
+            <span id="riwayat-ringkasan-teks">
+              Setiap aksi yang kamu selesaikan dicatat bersama jam kontribusi, catatan dampak dari penyelenggara, dan refleksi pribadimu.
+            </span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <h3>Kegiatan yang Telah Diselesaikan</h3>
+          <div class="vg-list" id="list-riwayat-selesai" aria-live="polite"></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+          <h3>Riwayat Lain (Dibatalkan, Ditolak, atau Tidak Hadir)</h3>
+          <div class="vg-list" id="list-riwayat-log" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+
+    {% if daftar_kegiatan_tersedia %}
+      <div class="card" style="display:flex;flex-direction:column;gap:16px">
+        <div class="row-between">
+          <div>
+            <span class="eyebrow"><span data-i="sprout"></span>Kegiatan Terbuka</span>
+            <h3 style="margin-top:4px">Lowongan Kegiatan Relawan Terbaru</h3>
+          </div>
+        </div>
+        <div class="vg-list">
+          {% for keg in daftar_kegiatan_tersedia %}
+            <div class="vg-item">
+              <div class="vg-item-head">
+                <div>
+                  <span class="chip ok sm">{{ keg.kategori }}</span>
+                  {% if keg.status_saya %}<span class="chip wait sm">{{ keg.status_saya_label }}</span>{% endif %}
+                  <h4 class="vg-item-title">{{ keg.judul }}</h4>
+                  <div class="vg-item-meta">
+                    <span><span data-i="pin"></span>{{ keg.lokasi }}</span>
+                    <span><span data-i="cal"></span>{{ keg.tanggal_display }}</span>
+                    <span><span data-i="user"></span>Sisa kuota: <b>{{ keg.sisa_kuota }}/{{ keg.kuota }}</b></span>
+                  </div>
+                </div>
+                {% if keg.sudah_terdaftar %}
+                  <a class="btn btn-ghost" href="{{ keg.url_daftar }}">Lihat Pendaftaran</a>
+                {% elif keg.sisa_kuota <= 0 %}
+                  <span class="chip danger">Kuota penuh</span>
+                {% else %}
+                  <a class="cta inline" href="{{ keg.url_daftar }}">
+                    Daftar Kegiatan
+                    <span class="arrow" data-i="arrow"></span>
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </main>
+
+  <!-- ================= MODAL 1: UBAH INFORMASI PENDAFTARAN (#modal-ubah) ================= -->
+  <div class="vg-modal-backdrop" id="modal-ubah" hidden>
+    <div class="vg-modal" role="dialog" aria-modal="true" aria-labelledby="judul-modal-ubah">
+      <div class="vg-modal-head">
+        <div>
+          <span class="eyebrow"><span data-i="pencil"></span>Perbarui Pendaftaran</span>
+          <h3 id="judul-modal-ubah">Ubah Informasi Pendaftaran</h3>
+          <p class="muted-sm" id="sub-modal-ubah"></p>
+        </div>
+        <button class="vg-modal-close" type="button" data-close-modal="modal-ubah" aria-label="Tutup">✕</button>
+      </div>
+
+      <form class="tab-pane" id="form-modal-ubah" novalidate>
+        <input type="hidden" id="ubah-pendaftaran-id" name="pendaftaran_id">
+        <span class="err" data-err="ubah___all__"></span>
+
+        <div class="field">
+          <label for="ubah-motivasi">Motivasi mengikuti kegiatan <span style="color:var(--danger)">*</span></label>
+          <div class="control" style="align-items:flex-start">
+            <textarea id="ubah-motivasi" name="motivasi" rows="3" required></textarea>
+          </div>
+          <span class="err" data-err="ubah_motivasi"></span>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="ubah-kontak">Kontak darurat <span style="color:var(--danger)">*</span></label>
+            <div class="control">
+              <span data-i="phone"></span>
+              <input id="ubah-kontak" name="kontak_darurat" type="tel" required>
+            </div>
+            <span class="err" data-err="ubah_kontak_darurat"></span>
+          </div>
+
+          <div class="field">
+            <label for="ubah-kebutuhan">Kebutuhan khusus (Opsional)</label>
+            <div class="control">
+              <input id="ubah-kebutuhan" name="kebutuhan_khusus" type="text">
+            </div>
+            <span class="err" data-err="ubah_kebutuhan_khusus"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ubah-pengalaman">Pengalaman relevan (Opsional)</label>
+          <div class="control" style="align-items:flex-start">
+            <textarea id="ubah-pengalaman" name="pengalaman_relevan" rows="2"></textarea>
+          </div>
+          <span class="err" data-err="ubah_pengalaman_relevan"></span>
+        </div>
+
+        <div class="vg-modal-foot">
+          <button class="btn btn-ghost" type="button" data-close-modal="modal-ubah">Batal</button>
+          <button class="cta inline" type="submit" id="btn-simpan-ubah">
+            <span>Simpan Perubahan</span>
+            <span class="arrow" data-i="arrow"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 2: BATALKAN PENDAFTARAN (#modal-batal) ================= -->
+  <div class="vg-modal-backdrop" id="modal-batal" hidden>
+    <div class="vg-modal" role="dialog" aria-modal="true" aria-labelledby="judul-modal-batal">
+      <div class="vg-modal-head">
+        <div>
+          <span class="eyebrow" style="color:var(--danger)"><span data-i="trash"></span>Konfirmasi Pembatalan</span>
+          <h3 id="judul-modal-batal">Batalkan Pendaftaran Kegiatan</h3>
+          <p class="muted-sm" id="sub-modal-batal"></p>
+        </div>
+        <button class="vg-modal-close" type="button" data-close-modal="modal-batal" aria-label="Tutup">✕</button>
+      </div>
+
+      <form class="tab-pane" id="form-modal-batal" novalidate>
+        <input type="hidden" id="batal-pendaftaran-id" name="pendaftaran_id">
+        <span class="err" data-err="batal___all__"></span>
+
+        <div class="field">
+          <label for="batal-alasan">Alasan pembatalan <span style="color:var(--danger)">*</span></label>
+          <div class="control" style="align-items:flex-start">
+            <textarea
+              id="batal-alasan"
+              name="alasan_pembatalan"
+              rows="3"
+              placeholder="Tuliskan alasan pembatalan secara jelas (minimal 5 karakter) agar penyelenggara dapat mengalokasikan kuota kepada relawan lain..."
+              required
+            ></textarea>
+          </div>
+          <span class="err" data-err="batal_alasan_pembatalan"></span>
+        </div>
+
+        <div class="vg-modal-foot">
+          <button class="btn btn-ghost" type="button" data-close-modal="modal-batal">Kembali</button>
+          <button class="btn btn-danger-outline" type="submit" id="btn-konfirmasi-batal">
+            <span data-i="trash"></span>Ya, Batalkan Pendaftaran
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL 3: REFLEKSI RIWAYAT PARTISIPASI (#modal-refleksi) ================= -->
+  <div class="vg-modal-backdrop" id="modal-refleksi" hidden>
+    <div class="vg-modal" role="dialog" aria-modal="true" aria-labelledby="judul-modal-refleksi">
+      <div class="vg-modal-head">
+        <div>
+          <span class="eyebrow"><span data-i="award"></span>Riwayat Partisipasi</span>
+          <h3 id="judul-modal-refleksi">Tulis Refleksi Relawan</h3>
+          <p class="muted-sm" id="sub-modal-refleksi"></p>
+        </div>
+        <button class="vg-modal-close" type="button" data-close-modal="modal-refleksi" aria-label="Tutup">✕</button>
+      </div>
+
+      <form class="tab-pane" id="form-modal-refleksi" novalidate>
+        <input type="hidden" id="refleksi-pendaftaran-id" name="pendaftaran_id">
+        <span class="err" data-err="refleksi___all__"></span>
+
+        <div class="field">
+          <label for="refleksi-teks">Kesan &amp; refleksi setelah mengikuti kegiatan <span style="color:var(--danger)">*</span></label>
+          <div class="control" style="align-items:flex-start">
+            <textarea
+              id="refleksi-teks"
+              name="refleksi_relawan"
+              rows="4"
+              placeholder="Ceritakan pengalamanmu, hal yang kamu pelajari, dan dampak yang kamu rasakan..."
+              required
+            ></textarea>
+          </div>
+          <span class="err" data-err="refleksi_refleksi_relawan"></span>
+        </div>
+
+        <div class="vg-modal-foot">
+          <button class="btn btn-ghost" type="button" data-close-modal="modal-refleksi">Batal</button>
+          <button class="cta inline" type="submit" id="btn-simpan-refleksi">
+            <span>Simpan Refleksi</span>
+            <span class="arrow" data-i="arrow"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notifikasi VoluGreen -->
+  <div class="toast" id="vg-toast" role="status" aria-live="polite">
+    <span data-i="check"></span>
+    <span id="vg-toast-msg"></span>
+  </div>
+
+  <footer class="app-footer"><div class="wrap"><span>© 2026 VoluGreen · Kelompok 3 Kelas D</span><a href="{% url 'main:profile_settings' %}">Profil</a></div></footer>
+  <script src="{% static 'volunteer/js/volunteer.js' %}"></script>
+</body>
+</html>
+<!-- ===================================================================== -->
+<!-- === END BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ======== -->
+<!-- ===================================================================== -->
+

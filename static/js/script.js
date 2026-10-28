@@ -38,92 +38,85 @@ const paintIcons=root=>root.querySelectorAll('[data-i]').forEach(el=>{ if(!el.da
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-/* ---------- state (sample account, in memory) ---------- */
-const CATS=['Bersih lingkungan','Urban farming','Penanaman pohon','Bank sampah','Daur ulang'];
-const user={name:'Micguel Katili',email:'micguel.katili@gmail.com',phone:'+62 812 3456 7890',city:'Depok, Jawa Barat',
-  bio:'Mahasiswa Ilmu Lingkungan. Suka kegiatan akhir pekan yang hasilnya langsung terlihat, terutama urban farming dan bersih sungai.',
-  interests:['Bersih lingkungan','Urban farming','Penanaman pohon'],joined:'Februari 2026',avatar:null};
-const org={name:'Bank Sampah Hijau Lestari',type:'Bank sampah',email:'halo@hijaulestari.id'};
-const docs=[{n:'Akta pendirian.pdf',s:'ok'},{n:'Surat keterangan domisili.pdf',s:'ok'},{n:'Foto kegiatan sebelumnya.zip',s:'wait'}];
-let draft=null;
+/* ---------- state ---------- */
+const profileDataElement=document.getElementById('volugreen-profile-data');
+const profileData=profileDataElement?JSON.parse(profileDataElement.textContent):null;
+const user={name:'',email:'',phone:'',city:'',joined:''};
+const org={name:'',type:'',email:'',phone:'',city:'',description:'',status:'not_submitted'};
+if(profileData?.role==='volunteer'){
+  Object.assign(user,profileData);
+}else if(profileData?.role==='organizer'){
+  Object.assign(org,{name:profileData.name,type:profileData.organization_type,email:profileData.email,
+    phone:profileData.phone,city:profileData.organization_city,description:profileData.organization_description,
+    status:profileData.organization_status});
+}
 
 const initials=n=>(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
-function avatarHTML(u){ return u.avatar?'<img src="'+u.avatar+'" alt="">':esc(initials(u.name)); }
-function tagHTML(list,cls){ return list.map(t=>'<span class="chip '+(cls||'')+'">'+esc(t)+'</span>').join(''); }
-
 function renderUser(){
-  $$('[data-bind="name"]').forEach(e=>e.textContent=user.name);
-  $$('[data-bind="city"]').forEach(e=>e.textContent=user.city);
-  $$('[data-bind="joined"]').forEach(e=>e.textContent='Bergabung sejak '+user.joined);
-  $$('[data-bind="bio"]').forEach(e=>e.textContent=user.bio||'Belum ada bio.');
+  $$('[data-bind="name"]').forEach(e=>e.textContent=user.name||'Nama belum diisi');
+  $$('[data-bind="city"]').forEach(e=>e.textContent=user.city||'Kota belum diisi');
+  $$('[data-bind="joined"]').forEach(e=>e.textContent=user.joined?'Bergabung sejak '+user.joined:'');
   $$('[data-bind="email"]').forEach(e=>e.textContent=user.email);
   $$('[data-bind="phone"]').forEach(e=>e.textContent=user.phone||'–');
-  $$('[data-bind="interests"]').forEach(e=>e.innerHTML=user.interests.length?tagHTML(user.interests):'<span class="muted-sm">Belum memilih kategori.</span>');
-  $$('[data-bind="org-name"]').forEach(e=>e.textContent=org.name);
-  $$('[data-bind="org-type"]').forEach(e=>e.textContent=org.type);
+  $$('[data-bind="org-name"]').forEach(e=>e.textContent=org.name||'Nama organisasi belum diisi');
+  $$('[data-bind="org-type"]').forEach(e=>e.textContent=org.type||'Jenis organisasi belum diisi');
   $$('[data-bind="org-email"]').forEach(e=>e.textContent=org.email);
+  $$('[data-bind="org-phone"]').forEach(e=>e.textContent=org.phone||'Nomor belum diisi');
+  $$('[data-bind="org-city"]').forEach(e=>e.textContent=org.city||'Lokasi belum diisi');
+  $$('[data-bind="org-description"]').forEach(e=>e.textContent=org.description||'Deskripsi organisasi belum diisi.');
+  $$('[data-bind="org-status"]').forEach(e=>{e.textContent=org.status==='verified'?'Terverifikasi':org.status==='rejected'?'Perlu perbaikan':org.status==='pending'?'Menunggu verifikasi':'Belum diajukan';e.className='chip '+(org.status==='verified'?'ok':org.status==='rejected'?'wait':'yellow');});
+  const orgNotice=$('#org-review-title');
+  if(orgNotice) orgNotice.textContent=org.status==='verified'?'Profil organisasi terverifikasi':org.status==='rejected'?'Profil organisasi perlu diperbaiki':org.status==='pending'?'Profil organisasi sedang ditinjau admin':'Ajukan profil organisasi agar admin dapat meninjaunya';
+  const stepIndex=org.status==='not_submitted'?1:org.status==='verified'?3:2;
+  $$('[data-org-step]').forEach((step,index)=>{
+    const done=org.status==='verified'||index<stepIndex;
+    const current=org.status!=='verified'&&index===stepIndex;
+    step.classList.toggle('done',done); step.classList.toggle('now',current);
+    if(current) step.setAttribute('aria-current','step'); else step.removeAttribute('aria-current');
+    const dot=step.querySelector('.dot'); if(dot) dot.innerHTML=done?svg('check'):'';
+  });
+  const reviewStep=$('[data-org-step="review"]');
+  if(reviewStep) reviewStep.lastChild.textContent=org.status==='rejected'?'Perlu perbaikan':'Ditinjau admin';
   renderAvatars(user);
 }
-function renderAvatars(u){
-  $$('[data-bind="avatar"]').forEach(e=>e.innerHTML=avatarHTML(u));
-  $$('.me[data-kind="relawan"]').forEach(e=>e.innerHTML=avatarHTML(u));
-}
-function renderLive(){
-  const d=draft||user;
-  $('[data-bind="name-live"]').textContent=d.name||'Nama lengkap';
-  $('[data-bind="city-live"]').textContent=d.city||'Kota domisili';
-  $('[data-bind="interests-live"]').innerHTML=tagHTML(d.interests,'dark');
-  $$('#s-edit [data-bind="avatar"]').forEach(e=>e.innerHTML=avatarHTML(d));
-}
+function renderAvatars(u){ $$('[data-bind="avatar"]').forEach(e=>e.textContent=initials(u.name)||'–'); }
 
 /* ---------- app header shells ---------- */
 const NAV={
-  relawan:[['Beranda','#beranda'],['Jelajahi kegiatan','soon:Jelajahi kegiatan dikerjakan di Modul 2'],['Kegiatan saya','soon:Kegiatan saya dikerjakan di Modul 3'],['Profil','#profil','profil']],
-  penyelenggara:[['Dashboard','soon:Dashboard penyelenggara dikerjakan di Modul 4'],['Lowongan','soon:Kelola lowongan dikerjakan di Modul 4'],['Pendaftar','soon:Tinjau pendaftar dikerjakan di Modul 4'],['Profil organisasi','#organisasi','organisasi']]
+  relawan:[['Beranda','#beranda'],['Jelajahi kegiatan','#kegiatan','kegiatan'],['Profil','#profil','profil']],
+  penyelenggara:[['Ringkasan',window.VOLUGREEN_ORGANIZER_URL+'#ringkasan'],['Kegiatan',window.VOLUGREEN_ORGANIZER_URL+'#lowongan'],['Laporan dampak',window.VOLUGREEN_ORGANIZER_URL+'#dampak'],['Profil organisasi','#organisasi','organisasi']]
 };
 $$('[data-shell]').forEach((h,i)=>{
   const kind=h.dataset.shell, active=h.dataset.active;
   const links=NAV[kind].map(([t,href,key])=>{
-    const soon=href.startsWith('soon:');
-    return '<a href="'+(soon?'#':href)+'"'+(soon?' data-soon="'+esc(href.slice(5))+'"':'')+(key===active?' aria-current="page"':'')+'>'+t+'</a>';
+    return '<a href="'+href+'"'+(key===active?' aria-current="page"':'')+'>'+t+'</a>';
   }).join('');
   const id='drawer-'+i;
   h.innerHTML='<div class="wrap" style="position:relative">'+
     '<a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>'+
     (kind==='penyelenggara'?'<span class="chip sm role-chip">Penyelenggara</span>':'')+
     '<nav class="app-nav" aria-label="Navigasi aplikasi">'+links+'</nav>'+
-    '<div class="app-tools"><button class="bell" type="button" aria-label="Notifikasi" data-soon="Belum ada notifikasi baru"><span data-i="bell"></span></button>'+
-    '<button class="me" type="button" data-kind="'+kind+'" aria-label="Akun"'+(kind==='penyelenggara'?' style="background:var(--yellow-soft)">RK':'>')+'</button>'+
+    '<div class="app-tools"><a class="me" href="'+window.VOLUGREEN_PROFILE_SETTINGS_URL+'" aria-label="Pengaturan akun">'+esc(initials(kind==='penyelenggara'?org.name:user.name)||'–')+'</a>'+
     '<button class="app-menu" type="button" aria-label="Buka menu" data-drawer="'+id+'"><span data-i="menu"></span></button></div>'+
-    '<div class="mobile-drawer" id="'+id+'" hidden>'+links+'<a href="#" data-logout>Keluar</a></div></div>';
+    '<div class="mobile-drawer" id="'+id+'" hidden>'+links+'<a href="'+window.VOLUGREEN_LOGOUT_URL+'">Keluar</a></div></div>';
 });
-$$('.me').forEach(b=>b.addEventListener('click',()=>{ location.hash=b.dataset.kind==='penyelenggara'?'organisasi':'edit-profil'; }));
 
-/* ---------- toast ---------- */
-let tt;
-function toast(msg){ $('#toast-msg').textContent=msg; const t=$('#toast'); t.classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2600); }
 document.addEventListener('click',e=>{
-  const s=e.target.closest('[data-soon]'); if(s){ e.preventDefault(); toast(s.dataset.soon); }
-  const lo=e.target.closest('[data-logout]'); if(lo){ e.preventDefault(); location.hash='masuk'; toast('Kamu sudah keluar. Sampai jumpa di aksi berikutnya.'); }
   const d=e.target.closest('[data-drawer]');
   $$('.mobile-drawer').forEach(m=>{ if(!d||m.id!==d.dataset.drawer) m.hidden=true; });
   if(d){ const m=document.getElementById(d.dataset.drawer); m.hidden=!m.hidden; }
-  if(!e.target.closest('.jump')){ $('#jump-list').hidden=true; $('#jump-btn').setAttribute('aria-expanded','false'); }
 });
 
 /* ---------- router ---------- */
-const SCREENS=[['beranda','2a','Masuk · foto penuh + kartu form'],['masuk','2b','Masuk · pilih peran'],['daftar','2c','Daftar · relawan / penyelenggara'],['profil','2d','Profil relawan'],['organisasi','2e','Profil penyelenggara'],['edit-profil','2f','Edit profil']];
-$('#jump-list').innerHTML=SCREENS.map(([r,c,t])=>'<li><a href="#'+r+'" data-r="'+r+'"><code>'+c+'</code>'+t+'</a></li>').join('');
-$('#jump-btn').addEventListener('click',()=>{ const l=$('#jump-list'); l.hidden=!l.hidden; $('#jump-btn').setAttribute('aria-expanded',String(!l.hidden)); });
 function route(){
-  const h=(location.hash||'#beranda').slice(1)||'beranda';
+  let h=(location.hash||'#beranda').slice(1)||'beranda';
+  if(['profil','organisasi'].includes(h)&&!profileData){ window.location.assign(window.VOLUGREEN_LOGIN_URL); return; }
+  if(h==='profil'&&profileData?.role==='organizer'){ location.replace('#organisasi'); return; }
+  if(h==='organisasi'&&profileData?.role==='volunteer'){ location.replace('#profil'); return; }
   let shown=null;
   $$('.screen').forEach(s=>{ const on=s.dataset.route.split(' ').includes(h); s.hidden=!on; if(on) shown=s; });
   if(!shown){ $('#s-beranda').hidden=false; shown=$('#s-beranda'); }
   $$('.mobile-drawer').forEach(m=>m.hidden=true);
-  const key=shown.dataset.route.split(' ')[0];
-  $$('#jump-list a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.r===key));
-  if(shown.id==='s-edit'){ openTab(['keamanan','notifikasi'].includes(h)?h:'edit-profil'); }
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
@@ -140,40 +133,32 @@ $$('[data-eye]').forEach(b=>b.addEventListener('click',()=>{
 $$('input').forEach(i=>i.addEventListener('input',()=>setErr(i.id,'')));
 function segment(root,cb){ root.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; $$('button',root).forEach(x=>x.setAttribute('aria-selected',String(x===b))); cb(b); }); }
 
-/* ---------- 2a quick login ---------- */
-$('#f-quick').addEventListener('submit',e=>{
-  e.preventDefault();
-  const em=$('#q-email').value.trim(), pw=$('#q-pass').value;
-  const ok=[setErr('q-email',EMAIL.test(em)?'':'Masukkan email yang valid, contoh nama@email.com.'),setErr('q-pass',pw.length>=8?'':'Kata sandi minimal 8 karakter.')].every(Boolean);
-  if(!ok) return;
-  user.email=em; renderUser(); location.hash='profil'; toast('Berhasil masuk. Selamat datang, '+user.name.split(' ')[0]+'!');
-});
-
 /* ---------- 2b role login ---------- */
 let loginRole='relawan';
-const ROLE_LABEL={relawan:'Relawan',penyelenggara:'Penyelenggara',admin:'Admin'};
+const ROLE_LABEL={relawan:'Relawan',penyelenggara:'Penyelenggara'};
 segment($('#login-role'),b=>{ loginRole=b.dataset.role; $('#login-cta').textContent='Masuk sebagai '+ROLE_LABEL[loginRole]; });
 $('#f-login').addEventListener('submit',e=>{
-  e.preventDefault();
   const em=$('#l-email').value.trim(), pw=$('#l-pass').value;
   const ok=[setErr('l-email',EMAIL.test(em)?'':'Masukkan email yang valid, contoh nama@email.com.'),setErr('l-pass',pw.length>=8?'':'Kata sandi minimal 8 karakter.')].every(Boolean);
-  if(!ok) return;
-  if(loginRole==='admin'){ toast('Panel admin dikerjakan di Modul 5'); return; }
-  if(loginRole==='penyelenggara'){ org.email=em; renderUser(); location.hash='organisasi'; toast('Masuk sebagai penyelenggara'); }
-  else { user.email=em; renderUser(); location.hash='profil'; toast('Berhasil masuk sebagai relawan'); }
+  if(!ok){ e.preventDefault(); return; }
+  $('#spa-login-role').value=loginRole==='penyelenggara'?'organizer':'volunteer';
 });
 
 /* ---------- 2c register ---------- */
-let regRole='relawan';
-const TICKS={relawan:['Cari kegiatan berdasarkan lokasi, kategori, dan waktu','Daftar kegiatan dan pantau status pendaftaranmu','Lihat riwayat partisipasi dan dampak kontribusimu'],
-  penyelenggara:['Publikasikan lowongan kegiatan dan atur kuota relawan','Tinjau pendaftar dan konfirmasi kehadiran','Catat dampak kegiatan setelah organisasi diverifikasi admin']};
+let regRole=$('#spa-reg-role').value==='organizer'?'penyelenggara':'relawan';
+const TICKS={relawan:['Buat akun relawan menggunakan email, nomor HP, dan kota domisili.'],
+  penyelenggara:['Kirim informasi organisasi untuk ditinjau admin.','Kelola draft kegiatan dan pantau status tinjauannya.','Catat dampak setelah kegiatan terbit dan selesai.']};
 function paintReg(){
   $('#reg-ticks').innerHTML=TICKS[regRole].map(t=>'<li><span class="t">'+svg('check')+'</span>'+t+'</li>').join('');
-  $$('[data-only]').forEach(f=>f.hidden=f.dataset.only!==regRole);
+  $$('#reg-role button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.role===regRole)));
+  $$('[data-only]').forEach(f=>f.hidden=!f.dataset.only.split(' ').includes(regRole));
   const org=regRole==='penyelenggara';
   $('#r-name-lbl').textContent=org?'Nama organisasi':'Nama lengkap';
-  $('#r-name').placeholder=org?'Contoh: Bank Sampah Hijau Lestari':'Nama sesuai KTM/KTP';
+  $('#r-name').placeholder=org?'Nama organisasi':'Nama sesuai KTM/KTP';
   $('#r-name').autocomplete=org?'organization':'name';
+  const cityLabel=$('#r-city-lbl');
+  if(cityLabel) cityLabel.textContent=org?'Kota organisasi':'Kota domisili';
+  $('#r-city').placeholder=org?'Masukkan kota organisasi':'Masukkan kota domisili';
   $('#gratis-sub').textContent=org?'untuk komunitas & organisasi':'untuk semua relawan';
 }
 segment($('#reg-role'),b=>{ regRole=b.dataset.role; paintReg(); });
@@ -182,7 +167,6 @@ $('#r-pass2').addEventListener('input',checkMatch);
 function checkMatch(){ const a=$('#r-pass').value,b=$('#r-pass2').value; $('#r-match').hidden=!(b&&a===b); }
 $('#r-terms').addEventListener('change',()=>setErr('r-terms',''));
 $('#f-reg').addEventListener('submit',e=>{
-  e.preventDefault();
   const v=id=>document.getElementById(id).value.trim();
   const isOrg=regRole==='penyelenggara';
   const checks=[
@@ -194,101 +178,11 @@ $('#f-reg').addEventListener('submit',e=>{
     setErr('r-pass2',$('#r-pass2').value===$('#r-pass').value&&$('#r-pass2').value?'':'Konfirmasi belum sama dengan kata sandi.'),
     setErr('r-terms',$('#r-terms').checked?'':'Centang persetujuan Syarat & Ketentuan untuk lanjut.')
   ];
-  if(!checks.every(Boolean)) return;
-  if(isOrg){ org.name=v('r-name'); org.email=v('r-email'); org.type=$('#r-type').value; renderUser(); location.hash='organisasi'; toast('Akun penyelenggara dibuat. Dokumen menunggu verifikasi admin.'); }
-  else { Object.assign(user,{name:v('r-name'),email:v('r-email'),phone:v('r-phone'),city:v('r-city'),bio:'',interests:[],joined:'Oktober 2026',avatar:null}); renderUser(); location.hash='edit-profil'; toast('Akun dibuat. Lengkapi profilmu dulu, yuk.'); }
+  if(!checks.every(Boolean)){ e.preventDefault(); return; }
+  $('#spa-reg-role').value=isOrg?'organizer':'volunteer';
 });
-
-/* ---------- 2e documents ---------- */
-function renderDocs(){
-  $('#docs').innerHTML=docs.map(d=>'<li>'+svg('file')+'<span class="n" title="'+esc(d.n)+'">'+esc(d.n)+'</span><span class="chip sm '+(d.s==='ok'?'ok':'wait')+'">'+(d.s==='ok'?'Diterima':'Ditinjau')+'</span></li>').join('');
-}
-$('#doc-file').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
-  if(f.size>10*1024*1024){ toast('Ukuran file maksimal 10 MB'); e.target.value=''; return; }
-  docs.push({n:f.name,s:'wait'}); renderDocs(); e.target.value=''; toast(f.name+' terunggah, menunggu ditinjau admin');
-});
-
-/* ---------- 2f edit profile ---------- */
-function openTab(t){
-  $$('#edit-tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===t)));
-  ['edit-profil','keamanan','notifikasi'].forEach(k=>$('#p-'+k).hidden=k!==t);
-  if(t==='edit-profil') loadDraft();
-}
-$('#edit-tabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) location.hash=b.dataset.tab; });
-function loadDraft(){
-  draft=JSON.parse(JSON.stringify(user));
-  $('#e-name').value=draft.name; $('#e-phone').value=draft.phone; $('#e-email').value=draft.email; $('#e-city').value=draft.city; $('#e-bio').value=draft.bio;
-  paintInterests(); bioCount(); renderLive(); setErr('e-name','');
-}
-function paintInterests(){
-  $('#e-interests').innerHTML=CATS.map(c=>'<button type="button" class="toggle-chip" aria-pressed="'+draft.interests.includes(c)+'" data-cat="'+esc(c)+'">'+svg('check')+esc(c)+'</button>').join('');
-}
-$('#e-interests').addEventListener('click',e=>{
-  const b=e.target.closest('[data-cat]'); if(!b) return; const c=b.dataset.cat;
-  draft.interests=draft.interests.includes(c)?draft.interests.filter(x=>x!==c):CATS.filter(x=>x===c||draft.interests.includes(x));
-  b.setAttribute('aria-pressed',String(draft.interests.includes(c))); renderLive();
-});
-function bioCount(){ $('#bio-count').textContent=$('#e-bio').value.length+'/240'; }
-$('#e-name').addEventListener('input',e=>{ draft.name=e.target.value; renderLive(); });
-$('#e-phone').addEventListener('input',e=>{ draft.phone=e.target.value; });
-$('#e-bio').addEventListener('input',e=>{ draft.bio=e.target.value; bioCount(); });
-$('#e-cancel').addEventListener('click',()=>{ location.hash='profil'; });
-$('#p-edit-profil').addEventListener('submit',e=>{
-  e.preventDefault();
-  if(!setErr('e-name',draft.name.trim().length>=3?'':'Nama minimal 3 huruf.')) return;
-  draft.name=draft.name.trim(); draft.city=$('#e-city').value.trim()||draft.city;
-  Object.assign(user,draft); renderUser(); location.hash='profil'; toast('Perubahan profil tersimpan');
-});
-$('#avatar-file').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
-  if(!/^image\/(png|jpe?g)$/.test(f.type)){ toast('Pilih foto JPG atau PNG'); return; }
-  if(f.size>2*1024*1024){ toast('Ukuran foto maksimal 2 MB'); return; }
-  const r=new FileReader(); r.onload=()=>{ draft.avatar=r.result; renderLive(); toast('Foto siap. Simpan perubahan untuk memakainya.'); }; r.readAsDataURL(f); e.target.value='';
-});
-
-/* city lookup: Nominatim when reachable, otherwise a small local list */
-const LOCAL=[['Depok','Jawa Barat, Indonesia'],['Depok','Sleman, DI Yogyakarta'],['Depok Jaya','Pancoran Mas, Depok'],['Jakarta Selatan','DKI Jakarta, Indonesia'],['Jakarta Timur','DKI Jakarta, Indonesia'],['Jakarta Pusat','DKI Jakarta, Indonesia'],['Bogor','Jawa Barat, Indonesia'],['Bekasi','Jawa Barat, Indonesia'],['Tangerang Selatan','Banten, Indonesia'],['Bandung','Jawa Barat, Indonesia'],['Yogyakarta','DI Yogyakarta, Indonesia'],['Semarang','Jawa Tengah, Indonesia'],['Surabaya','Jawa Timur, Indonesia'],['Malang','Jawa Timur, Indonesia'],['Denpasar','Bali, Indonesia'],['Makassar','Sulawesi Selatan, Indonesia'],['Medan','Sumatera Utara, Indonesia'],['Palembang','Sumatera Selatan, Indonesia'],['Balikpapan','Kalimantan Timur, Indonesia']];
-let results=[], sel=0, timer, src='local';
-const cityIn=$('#e-city'), list=$('#city-list');
-async function lookup(q){
-  try{
-    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),2500);
-    const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=id&q='+encodeURIComponent(q),{signal:ctl.signal,headers:{'Accept-Language':'id'}});
-    clearTimeout(to); if(!r.ok) throw 0; const j=await r.json();
-    src='osm'; return j.map(x=>{ const a=x.address||{}; const n=a.city||a.town||a.county||a.village||x.name||x.display_name.split(',')[0]; return [n,[a.state,a.country].filter(Boolean).join(', ')]; });
-  }catch(_){ src='local'; const s=q.toLowerCase(); return LOCAL.filter(([n,d])=>(n+' '+d).toLowerCase().includes(s)).slice(0,5); }
-}
-function paintList(){
-  if(!results.length){ list.hidden=true; cityIn.setAttribute('aria-expanded','false'); return; }
-  list.innerHTML=results.map(([n,d],i)=>'<li role="option" id="opt-'+i+'" aria-selected="'+(i===sel)+'" data-i2="'+i+'">'+svg('pin')+'<span><b>'+esc(n)+'</b><small>'+esc(d)+'</small></span></li>').join('')+
-    '<li class="src" role="presentation">'+(src==='osm'?'Data lokasi © OpenStreetMap contributors':'Contoh lokasi lokal · Nominatim tidak terjangkau dari halaman ini')+'</li>';
-  list.hidden=false; cityIn.setAttribute('aria-expanded','true'); cityIn.setAttribute('aria-activedescendant','opt-'+sel);
-}
-function pick(i){ const [n,d]=results[i]; const v=n+', '+d.split(',')[0]; cityIn.value=v; draft.city=v; results=[]; paintList(); renderLive(); }
-cityIn.addEventListener('input',()=>{ draft.city=cityIn.value; renderLive(); clearTimeout(timer); const q=cityIn.value.trim(); if(q.length<2){ results=[]; paintList(); return; } timer=setTimeout(async()=>{ results=await lookup(q); sel=0; paintList(); },300); });
-cityIn.addEventListener('keydown',e=>{
-  if(list.hidden) return;
-  if(e.key==='ArrowDown'){ e.preventDefault(); sel=(sel+1)%results.length; paintList(); }
-  else if(e.key==='ArrowUp'){ e.preventDefault(); sel=(sel-1+results.length)%results.length; paintList(); }
-  else if(e.key==='Enter'){ e.preventDefault(); pick(sel); }
-  else if(e.key==='Escape'){ results=[]; paintList(); }
-});
-list.addEventListener('mousedown',e=>{ const li=e.target.closest('[data-i2]'); if(li){ e.preventDefault(); pick(+li.dataset.i2); } });
-cityIn.addEventListener('blur',()=>setTimeout(()=>{ results=[]; paintList(); },120));
-
-/* security + notifications */
-$('#k-new').addEventListener('input',()=>paintStrength($('#k-strength'),$('#k-new').value));
-$('#p-keamanan').addEventListener('submit',e=>{
-  e.preventDefault();
-  const ok=[setErr('k-old',$('#k-old').value.length>=8?'':'Isi kata sandi saat ini.'),
-    setErr('k-new',$('#k-new').value.length>=8?($('#k-new').value===$('#k-old').value?'Kata sandi baru harus berbeda dari yang lama.':''):'Kata sandi baru minimal 8 karakter.'),
-    setErr('k-new2',$('#k-new2').value===$('#k-new').value&&$('#k-new2').value?'':'Belum sama dengan kata sandi baru.')].every(Boolean);
-  if(!ok) return; e.target.reset(); paintStrength($('#k-strength'),''); toast('Kata sandi diperbarui');
-});
-$$('.switch').forEach(s=>s.addEventListener('click',()=>{ const on=s.getAttribute('aria-checked')!=='true'; s.setAttribute('aria-checked',String(on)); toast((on?'Aktif: ':'Nonaktif: ')+s.getAttribute('aria-label')); }));
 
 /* ---------- boot ---------- */
 const PHOTO=window.VOLUGREEN_PHOTO_URL; $$("img[data-photo]").forEach(i=>i.src=PHOTO);
-paintIcons(document); paintReg(); renderDocs(); renderUser(); route();
+paintIcons(document); paintReg(); renderUser(); route();
 })();

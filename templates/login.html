@@ -1,0 +1,97 @@
+{% extends "auth_base.html" %}
+{% load static %}
+
+{% block title %}Masuk - VoluGreen{% endblock title %}
+
+{% block content %}
+<section class="screen" id="s-masuk">
+  <div class="auth-col">
+    <a class="logo" href="{% url 'main:home' %}">
+      <span class="logo-mark" data-i="leaf"></span>VoluGreen
+    </a>
+
+    <form class="inner" id="f-login" method="post" action="{% url 'main:login' %}" novalidate>
+      {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {{ form.role }}
+
+      <span class="eyebrow">
+        <span data-i="sprout"></span>Selamat datang kembali
+      </span>
+      <h1>Masuk dan lanjutkan <span class="hl">aksimu</span></h1>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="notice" role="status">
+            <div class="txt"><b>{{ message }}</b></div>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% for error in form.non_field_errors %}
+        <p class="err">{{ error }}</p>
+      {% endfor %}
+
+      <div class="field">
+        <span class="label" id="lbl-role">Masuk sebagai</span>
+        <div class="seg" role="tablist" aria-labelledby="lbl-role" id="login-role">
+          <button type="button" role="tab" aria-selected="{% if requested_role == 'volunteer' %}true{% else %}false{% endif %}" data-role="volunteer">
+            <span data-i="heart"></span>Relawan
+          </button>
+          <button type="button" role="tab" aria-selected="{% if requested_role == 'organizer' %}true{% else %}false{% endif %}" data-role="organizer">
+            <span data-i="building"></span>Penyelenggara
+          </button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="{{ form.username.id_for_label }}">Email</label>
+        <div class="control">
+          <span data-i="mail"></span>{{ form.username }}
+        </div>
+        {% for error in form.username.errors %}<span class="err">{{ error }}</span>{% endfor %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.password.id_for_label }}">Kata sandi</label>
+        <div class="control">
+          <span data-i="lock"></span>{{ form.password }}
+          <button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="l-pass">
+            <span data-i="eye"></span>
+          </button>
+        </div>
+        {% for error in form.password.errors %}<span class="err">{{ error }}</span>{% endfor %}
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:-8px">
+      </div>
+
+      <button class="cta block" type="submit">
+        <span id="login-cta">Masuk sebagai {% if requested_role == 'organizer' %}Penyelenggara{% else %}Relawan{% endif %}</span>
+        <span class="arrow" data-i="arrow"></span>
+      </button>
+
+      <p style="font-size:14.5px;color:var(--muted)">
+        Belum punya akun?
+        <a class="link-strong" href="{% url 'main:register' %}?role={{ requested_role|urlencode }}{% if next %}&amp;next={{ next|urlencode }}{% endif %}" style="text-decoration:underline">Daftar sekarang</a>
+      </p>
+    </form>
+  </div>
+
+  <div class="panel" aria-hidden="true">
+    <div class="dots" style="--dot:rgba(255,255,255,.25);left:32px;bottom:32px;width:150px;height:150px"></div>
+    <div class="p1"><img class="photo" src="{% static 'assets/photo.jpg' %}" alt=""></div>
+    <div class="p2"><div><img class="photo" src="{% static 'assets/photo.jpg' %}" alt=""></div></div>
+    <div class="badge-float badge-yellow b1">
+      <big>{{ verified_organization_count }}</big><span>organisasi<br>terverifikasi</span>
+    </div>
+    <div class="badge-float badge-dark b2">
+      <span class="round" data-i="building"></span>Kelola profil organisasi<br>dan kegiatan lingkungan
+    </div>
+  </div>
+</section>
+{% endblock content %}
+
+{% block scripts %}
+<script src="{% static 'js/auth.js' %}?v=3"></script>
+{% endblock scripts %}

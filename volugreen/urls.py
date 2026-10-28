@@ -19,5 +19,11 @@ from django.urls import include, path
 
 urlpatterns = [
     path('', include('main.urls')),
+    path('organizer/', include('organizer.urls')),
+    path('admin-panel/', include('admin_panel.urls')),
+    path('eksplorasi/', include('eksplorasi.urls')),
+    path('relawan/', include('relawan.urls')),
+    path('volunteer/', include('volunteer.urls')),
+    path('api/mock/', include('mock_api.urls', namespace='mock_api')),
     path('admin/', admin.site.urls),
 ]

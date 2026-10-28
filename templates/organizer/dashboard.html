@@ -1,0 +1,113 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Penyelenggara · VoluGreen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/organizer.css' %}?v=6">
+</head>
+<body class="organizer-body">
+  <a class="organizer-skip" href="#konten">Lewati ke konten</a>
+  <header class="organizer-top">
+    <div class="wrap organizer-top-inner">
+      <a class="logo" href="{% url 'main:home' %}"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>VoluGreen</a>
+      <nav aria-label="Navigasi penyelenggara">
+        <a href="{% url 'organizer:dashboard' %}"{% if page == 'overview' %} aria-current="page"{% endif %}>Ringkasan</a>
+        <a href="{% url 'organizer:activities' %}"{% if page == 'activities' %} aria-current="page"{% endif %}>Kegiatan</a>
+        <a href="{% url 'main:profile_settings' %}">Profil organisasi</a>
+      </nav>
+      <div class="organizer-account"><span>{{ profile.organization_name|default:request.user.username }}</span><a href="{% url 'main:logout' %}">Keluar</a></div>
+    </div>
+  </header>
+
+  <main class="wrap organizer-main" id="konten">
+    {% if submission_complete %}<section class="organizer-submission-notice" role="status" aria-live="polite" data-submission-notice><span class="organizer-submission-mark" aria-hidden="true">✓</span><div><span class="eyebrow">KEGIATAN TERKIRIM</span><h2>Kegiatan sedang ditinjau admin</h2><p>Setelah disetujui, kegiatan akan tampil di Cari kegiatan dan bisa diikuti relawan.</p><small>Kembali ke ringkasan dalam <strong data-submission-countdown>5</strong> detik.</small></div></section>{% endif %}
+    {% if messages %}<div class="organizer-messages">{% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+    {% if page == 'overview' %}
+    <section class="organizer-heading" id="ringkasan" aria-labelledby="welcome-title">
+      <div class="organizer-hero-photo"><img src="{% static 'assets/photo.jpg' %}" alt="Relawan VoluGreen merawat lingkungan bersama"></div>
+      <div class="organizer-hero-content">
+        <span class="eyebrow">RUANG PENYELENGGARA</span>
+        <h1 id="welcome-title">Halo, {{ profile.organization_name|default:request.user.username }}</h1>
+        <p>Buat kegiatan dan pantau tinjauan admin sebelum kegiatan tampil untuk relawan.</p>
+        {% if organization_submission and organization_submission.status == "verified" %}
+          <span class="chip ok">Organisasi terverifikasi</span>
+        {% elif organization_submission and organization_submission.status == "rejected" %}
+          <span class="chip rejected">Verifikasi perlu diperbaiki · kunjungi profil organisasi</span>
+        {% else %}
+          <span class="chip wait">Verifikasi organisasi menunggu tinjauan admin</span>
+        {% endif %}
+      </div>
+      <a class="cta inline organizer-hero-cta" href="{% url 'organizer:activities' %}#form-kegiatan">Buat kegiatan <span class="arrow" aria-hidden="true">↗</span></a>
+    </section>
+
+    <section class="organizer-overview" aria-label="Ringkasan kegiatan">
+      <div><span>Total kegiatan</span><strong>{{ activity_count }}</strong></div>
+      <div><span>Menunggu tinjauan</span><strong>{{ draft_count }}</strong></div>
+      <div><span>Sudah diterbitkan</span><strong>{{ published_count }}</strong></div>
+    </section>
+    {% else %}
+    <section class="organizer-heading organizer-page-heading"><div class="organizer-hero-content"><span class="eyebrow">RUANG PENYELENGGARA</span><h1>Kegiatanmu</h1><p>Kelola kegiatan dan pendaftaran relawan di halaman ini.</p></div></section>
+    {% endif %}
+
+    {% if page == 'activities' %}
+    <section class="organizer-section" id="lowongan">
+      <div class="organizer-section-title"><div><span class="eyebrow">KEGIATAN</span><h2>Kegiatanmu</h2><p class="organizer-section-lede">Kegiatan baru ditinjau admin sebelum bisa dilihat relawan.</p></div><a class="cta inline" href="#form-kegiatan">Buat kegiatan <span class="arrow" aria-hidden="true">↗</span></a></div>
+      {% if activities %}
+        <div class="organizer-list">
+          {% for activity in activities %}
+            <article class="organizer-event">
+              <div class="organizer-event-main">
+                <div class="organizer-event-title"><h3>{{ activity.nama }}</h3><span class="chip {% if activity.status_publikasi == 'published' %}ok{% elif activity.status_publikasi == 'draft' %}wait{% endif %}">{{ activity.status_display }}</span></div>
+                <p>{{ activity.deskripsi }}</p>
+                <div class="organizer-event-meta"><span>{{ activity.kategori.name }}</span><span>{{ activity.tanggal_mulai|date:"d/m/Y, H:i" }}</span><span>{{ activity.nama_lokasi }}{% if activity.kota %}, {{ activity.kota }}{% endif %}</span><span>Sisa kuota: {{ activity.sisa_kuota }} dari {{ activity.kuota }}</span></div>
+                {% if activity.status_publikasi == 'published' %}
+                  <details class="organizer-applicants"><summary>Pendaftar relawan <span>{{ activity.application_count }}</span>{% if activity.pending_application_count %}<small>{{ activity.pending_application_count }} menunggu</small>{% endif %}</summary>
+                      {% if activity.applications %}<div class="organizer-applicant-list">{% for application in activity.applications %}<article class="organizer-applicant"><div><strong>{{ application.relawan.get_full_name|default:application.relawan.username }}</strong><span>{{ application.relawan.email }}{% if application.relawan.profile.city %} · {{ application.relawan.profile.city }}{% endif %}</span></div><span class="chip sm {% if application.status == 'ACCEPTED' or application.status == 'COMPLETED' %}ok{% elif application.status == 'REJECTED' or application.status == 'ABSENT' %}{% else %}wait{% endif %}">{{ application.get_status_display }}</span>
+                      {% if application.pesan %}<p class="organizer-review-note">Catatan: {{ application.pesan }}</p>{% endif %}
+                      {% if application.status == 'PENDING' and not activity.event_is_over %}<form method="post" class="organizer-applicant-review">{% csrf_token %}<input type="hidden" name="action" value="update_application"><input type="hidden" name="application_id" value="{{ application.pk }}"><label class="sr" for="review-note-{{ application.pk }}">Catatan untuk relawan</label><textarea id="review-note-{{ application.pk }}" name="pesan" maxlength="500" rows="2" placeholder="Catatan untuk relawan (opsional)"></textarea><div class="organizer-applicant-actions"><button class="btn btn-ghost" type="submit" name="status" value="ACCEPTED">Terima</button><button class="btn btn-text" type="submit" name="status" value="REJECTED">Tolak</button></div></form>
+                      {% elif application.status == 'ACCEPTED' and activity.event_is_over %}<div class="organizer-applicant-actions"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="update_application"><input type="hidden" name="application_id" value="{{ application.pk }}"><input type="hidden" name="status" value="COMPLETED"><input type="hidden" name="jam_kontribusi" value="3"><button class="btn btn-ghost" type="submit">Tandai hadir</button></form><form method="post">{% csrf_token %}<input type="hidden" name="action" value="update_application"><input type="hidden" name="application_id" value="{{ application.pk }}"><input type="hidden" name="status" value="ABSENT"><button class="btn btn-text" type="submit">Tandai tidak hadir</button></form></div>{% endif %}
+                    </article>{% endfor %}</div>{% else %}<p class="organizer-applicant-empty">Belum ada relawan yang mendaftar.</p>{% endif %}
+                  </details>
+                {% endif %}
+              </div>
+              <div class="organizer-event-actions">
+                {% if activity.status_publikasi != 'published' %}<a class="btn btn-ghost" href="?edit={{ activity.pk }}#form-kegiatan">Ubah</a>{% endif %}
+                {% if activity.status_publikasi != 'published' %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_activity"><input type="hidden" name="activity_id" value="{{ activity.pk }}"><button class="btn btn-text" type="submit" onclick="return confirm('Hapus draft ini?')">Hapus</button></form>{% endif %}
+              </div>
+              {% if activity.status_publikasi == 'draft' %}<small class="organizer-review-note">Draft akan diperiksa admin sebelum diterbitkan.</small>{% elif activity.status_publikasi == 'published' %}<small class="organizer-review-note">Kegiatan sudah dapat ditemukan relawan.</small>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}<p class="organizer-empty">Belum ada kegiatan. Buat kegiatan pertamamu lewat formulir di bawah.</p>{% endif %}
+
+      <section class="organizer-form-card" id="form-kegiatan">
+        <div class="organizer-section-title"><div><span class="eyebrow">FORM KEGIATAN</span><h2>{% if request.GET.edit %}Ubah kegiatan{% else %}Buat kegiatan{% endif %}</h2></div></div>
+        <p class="organizer-muted">Kirim kegiatan untuk ditinjau admin. Setelah disetujui, kegiatan akan tampil di Cari kegiatan.</p>
+        <form method="post" class="organizer-form">{% csrf_token %}<input type="hidden" name="action" value="submit_activity">{% if request.GET.edit %}<input type="hidden" name="activity_id" value="{{ request.GET.edit }}">{% endif %}
+          {% if form.non_field_errors %}<div class="organizer-form-errors">{{ form.non_field_errors }}</div>{% endif %}
+          {{ form.latitude }}{{ form.longitude }}
+          <div class="organizer-form-grid">{% for field in form %}{% if not field.is_hidden %}<div class="organizer-field {% if field.name == 'deskripsi' or field.name == 'alamat' %}wide{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>{% endif %}{% endfor %}
+            <div class="organizer-field wide organizer-map-field">
+              <div class="organizer-map-heading"><div><label>Pilih lokasi di peta</label><small>Cari dengan nama tempat atau alamat. Koordinat akan terisi otomatis.</small></div><button class="btn btn-ghost" type="button" data-osm-search>Cari lokasi</button></div>
+              <p class="organizer-map-status" data-osm-status aria-live="polite">Isi nama tempat dan kota, lalu pilih “Cari lokasi”.</p>
+              <div class="organizer-map-frame" data-osm-frame-wrap hidden><iframe data-osm-frame title="Peta OpenStreetMap lokasi kegiatan" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+              <a class="organizer-map-link" data-osm-link href="https://www.openstreetmap.org/" target="_blank" rel="noopener" hidden>Buka peta lebih besar <span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+          <div class="organizer-form-actions"><button class="cta inline" type="submit">Kirim kegiatan</button>{% if request.GET.edit %}<a class="btn btn-text" href="{% url 'organizer:dashboard' %}#lowongan">Batal</a>{% endif %}</div>
+        </form>
+      </section>
+    </section>
+    {% endif %}
+
+  </main>
+  <script src="{% static 'js/organizer.js' %}?v=4"></script>
+  <script src="{% static 'js/osm.js' %}?v=3"></script>
+</body>
+</html>

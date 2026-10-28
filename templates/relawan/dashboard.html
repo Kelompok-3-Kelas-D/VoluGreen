@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pendaftaran saya · VoluGreen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'css/relawan.css' %}?v=2">
+</head>
+<body class="volunteer-body">
+  <header class="volunteer-top"><div class="wrap volunteer-top-inner">
+    <a class="logo" href="{% url 'main:home' %}"><span class="logo-mark" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>VoluGreen</a>
+    <nav aria-label="Navigasi relawan"><a href="{% url 'main:home' %}">Beranda</a><a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a><a href="{% url 'relawan:dashboard' %}" aria-current="page">List kegiatan</a><a href="{% url 'main:profile_settings' %}">Profil</a></nav>
+  </div></header>
+  <main class="wrap volunteer-main">
+    <section class="volunteer-heading"><span class="eyebrow">RUANG RELAWAN</span><h1>Hai, {{ request.user.first_name|default:request.user.username }}</h1><p>Pantau pendaftaran dan status kegiatanmu di satu tempat.</p></section>
+    {% if messages %}<div class="volunteer-messages" aria-live="polite">{% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+    <section class="volunteer-stats" aria-label="Ringkasan pendaftaran"><article class="card"><span>Pendaftaran aktif</span><strong>{{ active_count }}</strong></article><article class="card"><span>Riwayat kehadiran</span><strong>{{ history_count }}</strong></article></section>
+    <section class="volunteer-section"><div class="volunteer-section-heading"><div><span class="eyebrow">AKTIVITAS AKUN</span><h2>Pendaftaran kegiatan</h2><p>Perubahan status akan muncul setelah penyelenggara meninjau pendaftaranmu.</p></div><a class="btn btn-ghost" href="{% url 'eksplorasi:index' %}">Cari kegiatan <span aria-hidden="true">↗</span></a></div>
+      <div class="volunteer-list">{% for application in applications %}
+        <article class="volunteer-application card">
+          <div class="volunteer-application-top"><span class="chip sm">{{ application.kegiatan.kategori.name }}</span><span class="volunteer-status {% if application.status == 'accepted' or application.status == 'attended' %}is-good{% elif application.status == 'rejected' or application.status == 'absent' %}is-muted{% elif application.status == 'cancelled' %}is-muted{% else %}is-wait{% endif %}">{{ application.get_status_display }}</span></div>
+          <h3>{{ application.kegiatan.nama }}</h3>
+          <p>{{ application.kegiatan.deskripsi }}</p>
+          <dl><div><dt>Jadwal</dt><dd>{{ application.kegiatan.tanggal_mulai|date:"d/m/Y, H:i" }}</dd></div><div><dt>Lokasi</dt><dd>{{ application.kegiatan.nama_lokasi }}{% if application.kegiatan.kota %}, {{ application.kegiatan.kota }}{% endif %}</dd></div><div><dt>Penyelenggara</dt><dd>{{ application.kegiatan.organizer.profile.organization_name|default:application.kegiatan.organizer.username }}</dd></div></dl>
+          {% if application.pesan %}<p class="volunteer-feedback"><strong>Catatan penyelenggara:</strong> {{ application.pesan }}</p>{% endif %}
+          <div class="volunteer-actions">{% if application.status == 'pending' or application.status == 'accepted' %}{% if application.kegiatan.tanggal_mulai > now %}<form method="post" action="{% url 'relawan:cancel' application.pk %}">{% csrf_token %}<button class="btn btn-ghost" type="submit">Batalkan pendaftaran</button></form>{% endif %}{% endif %}<span>Didaftarkan {{ application.dibuat_pada|date:"d/m/Y" }}</span></div>
+        </article>
+      {% empty %}<article class="volunteer-empty card"><span class="explore-empty-mark" aria-hidden="true">↗</span><h3>Belum ada pendaftaran</h3><p>Temukan kegiatan yang sesuai minatmu. Status dan riwayatnya akan tercatat di halaman ini setelah kamu mendaftar.</p><a class="cta inline" href="{% url 'eksplorasi:index' %}">Cari kegiatan <span class="arrow" aria-hidden="true">↗</span></a></article>{% endfor %}</div>
+    </section>
+  </main>
+</body>
+</html>

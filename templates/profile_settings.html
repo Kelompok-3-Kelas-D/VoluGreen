@@ -1,0 +1,65 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pengaturan profil · VoluGreen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'css/app-shell.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'css/profile-settings.css' %}?v=5">
+</head>
+<body class="settings-body">
+  <header class="app-top">
+    <div class="wrap app-shell-top">
+      <a class="logo" href="{% url 'main:home' %}"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>VoluGreen</a>
+      {% if profile.role == 'volunteer' %}
+        <nav class="app-nav" aria-label="Navigasi relawan"><a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a><a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a><a href="{% url 'main:profile_settings' %}" aria-current="page">Profil</a></nav>
+      {% else %}
+        <a class="btn btn-text" href="{% url 'organizer:dashboard' %}">Kembali ke dashboard</a>
+      {% endif %}
+    </div>
+  </header>
+  <main class="wrap settings-main">
+    <div class="settings-intro"><span class="eyebrow">AKUN VOLUGREEN</span><h1>Pengaturan profil</h1><p>Perubahan disimpan ke akun dan profil organisasi yang terdaftar.</p></div>
+    {% if messages %}<div class="settings-messages" aria-live="polite">{% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+    <section class="card settings-card">
+      <div class="settings-card-title"><div><h2>Informasi profil</h2><p>Alamat email akun: <strong>{{ request.user.email }}</strong></p></div></div>
+      <form method="post" class="settings-form">
+        {% csrf_token %}<input type="hidden" name="form_type" value="profile">
+        {% if profile_form.non_field_errors %}<div class="settings-errors" role="alert">{{ profile_form.non_field_errors }}</div>{% endif %}
+        <div class="settings-fields">
+          {% for field in profile_form %}
+            <div class="field {% if field.name == 'organization_description' %}field-wide{% endif %}">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+              {% for error in field.errors %}<small class="settings-error">{{ error }}</small>{% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+        <button class="cta inline" type="submit">Simpan profil <span class="arrow" aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+    <section class="card settings-card" id="keamanan">
+      <div class="settings-card-title"><div><h2>Keamanan akun</h2><p>Perbarui kata sandi akun ini.</p></div></div>
+      <form method="post" class="settings-form">
+        {% csrf_token %}<input type="hidden" name="form_type" value="password">
+        {% if password_form.non_field_errors %}<div class="settings-errors" role="alert">{{ password_form.non_field_errors }}</div>{% endif %}
+        <div class="settings-fields settings-password-fields">
+          {% for field in password_form %}
+            <div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+              {% if field.help_text %}<small>{{ field.help_text|safe }}</small>{% endif %}
+              {% for error in field.errors %}<small class="settings-error">{{ error }}</small>{% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+        <button class="cta inline" type="submit">Perbarui kata sandi <span class="arrow" aria-hidden="true">↗</span></button>
+      </form>
+      <div class="settings-logout"><div><strong>Keluar dari akun?</strong><p>Sesi VoluGreen di perangkat ini akan diakhiri.</p></div><a class="btn settings-logout-button" href="{% url 'main:logout' %}">Keluar</a></div>
+    </section>
+  </main>
+  <footer class="app-footer"><div class="wrap"><span>© 2026 VoluGreen · Kelompok 3 Kelas D</span><a href="{% url 'main:logout' %}">Keluar dari akun</a></div></footer>
+</body>
+</html>
