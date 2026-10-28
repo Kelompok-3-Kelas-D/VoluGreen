@@ -69,3 +69,67 @@ class UserReport(models.Model):
 
     def __str__(self):
         return self.subject
+
+
+# ---------------------------------------------------------------------------
+# REFERENSI LATIHAN LIVE CODING ADMIN PANEL
+#
+# Potongan di bawah sengaja berupa komentar: ini contoh jawaban latihan, bukan
+# fitur aktif. Jika diminta mengerjakan salah satu soal, pindahkan potongan yang
+# relevan ke lokasi yang tertulis, hapus tanda komentar (#), lalu buat dan
+# jalankan migrasi jika perubahan menyentuh field/opsi model:
+#   python manage.py makemigrations admin_panel
+#   python manage.py migrate
+# ---------------------------------------------------------------------------
+
+# SOAL 1 — Tambahkan prioritas untuk laporan pengguna.
+# Lokasi: di dalam class UserReport, setelah class Status dan sebelum field
+# reporter. Tambahkan field priority setelah field status.
+#
+#     class Priority(models.TextChoices):
+#         LOW = "low", "Rendah"
+#         NORMAL = "normal", "Normal"
+#         HIGH = "high", "Tinggi"
+#
+#     priority = models.CharField(
+#         max_length=10,
+#         choices=Priority.choices,
+#         default=Priority.NORMAL,
+#     )
+#
+# Catatan demo: field model saja menyimpan datanya. Agar admin dapat mengubah
+# prioritas dari halaman panel, form di admin_panel/templates/admin_panel/
+# dashboard.html dan pemrosesan POST di admin_panel/views.py juga perlu diubah.
+
+# SOAL 2 — Simpan email pelapor secara opsional.
+# Lokasi: di dalam class UserReport, tepat setelah field reporter.
+#
+#     reporter_email = models.EmailField(blank=True)
+#
+# Jika nilai ini harus diisi lewat panel, tambahkan input form dan validasi di
+# view. EmailField memvalidasi format ketika validasi form/model dijalankan.
+
+# SOAL 3 — Tambahkan helper untuk mengecek apakah laporan masih terbuka.
+# Lokasi: di dalam class UserReport, sebelum method __str__.
+# Tidak perlu migrasi database karena property bukan kolom baru.
+#
+#     @property
+#     def is_open(self):
+#         return self.status != self.Status.RESOLVED
+
+# SOAL 4 — Urutkan laporan dari yang terbaru.
+# Lokasi: ganti ordering di dalam class Meta milik UserReport.
+#
+#     ordering = ["-created_at"]
+#
+# Ini mengubah urutan default query UserReport.objects.all(). Untuk menampilkan
+# urutan berbeda hanya pada satu halaman, gunakan .order_by(...) di view.
+
+# SOAL 5 — Tambahkan status “Menunggu informasi” pada laporan.
+# Lokasi: di dalam class Status milik UserReport, bersama pilihan status lain.
+#
+#     WAITING = "waiting", "Menunggu informasi"
+#
+# Jika status baru dipilih dari panel, tambahkan juga <option> pada form laporan
+# di dashboard.html. Pilihan yang hanya ditambahkan di model belum otomatis
+# menambahkan tombol atau opsi ke antarmuka.
