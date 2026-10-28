@@ -19,5 +19,12 @@ from django.urls import include, path
 
 urlpatterns = [
     path('', include('main.urls')),
+    # =====================================================================
+    # === START BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ======
+    # =====================================================================
+    path('volunteer/', include('volunteer.urls')),
+    # =====================================================================
+    # === END BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ========
+    # =====================================================================
     path('admin/', admin.site.urls),
 ]

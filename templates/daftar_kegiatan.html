@@ -1,0 +1,264 @@
+{% load static %}
+<!-- ===================================================================== -->
+<!-- === START BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ====== -->
+<!-- ===================================================================== -->
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Daftar Kegiatan · {{ kegiatan_info.judul }} — VoluGreen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/volunteer_modul3.css' %}">
+</head>
+<body class="app">
+  <!-- App Top Shell VoluGreen -->
+  <header class="app-top">
+    <div class="wrap" style="position:relative">
+      <a class="logo" href="{% url 'main:home' %}">
+        <span class="logo-mark" data-i="leaf"></span>VoluGreen
+      </a>
+      <span class="chip sm role-chip">Relawan</span>
+      <nav class="app-nav" aria-label="Navigasi aplikasi">
+        <a href="{% url 'main:home' %}">Beranda</a>
+        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">Kegiatan saya</a>
+        <a href="{% url 'main:home' %}#profil">Profil</a>
+      </nav>
+      <div class="app-tools">
+        <a class="me" href="{% url 'main:home' %}#profil" title="{{ nama_relawan }}" style="text-decoration:none">{{ inisial_relawan }}</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main wrap">
+    <div class="edit-grid">
+      <!-- Kolom Kiri: Formulir Pendaftaran atau Notice Sudah Terdaftar -->
+      <div class="card" style="padding:28px 32px 32px">
+        <div class="edit-head">
+          <div>
+            <span class="eyebrow"><span data-i="sprout"></span>Alur Relawan · Pendaftaran Kegiatan</span>
+            <h1>Daftar sebagai <span class="hl">Relawan</span></h1>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="{% url 'volunteer:halaman_dashboard_relawan' %}">
+            <span data-i="calcheck"></span>Dashboard Relawan
+          </a>
+        </div>
+
+        <!-- Notice ketika relawan SUDAH terdaftar (atau baru saja selesai mendaftar via AJAX) -->
+        <div
+          class="notice"
+          id="box-sudah-terdaftar"
+          role="status"
+          {% if not sudah_terdaftar %}hidden{% endif %}
+        >
+          <span class="round" data-i="calcheck"></span>
+          <div class="txt">
+            <b id="notice-judul-terdaftar">
+              {% if pendaftaran %}
+                Kamu sudah terdaftar pada kegiatan ini ({{ pendaftaran.get_status_display }})
+              {% else %}
+                Pendaftaranmu telah tercatat
+              {% endif %}
+            </b>
+            <span id="notice-pesan-terdaftar">
+              {% if pendaftaran %}
+                Satu relawan hanya dapat mendaftar satu kali pada kegiatan yang sama. Kamu dapat memantau status konfirmasi, mengubah informasi pendaftaran, atau membatalkan pendaftaran melalui Dashboard Relawan.
+              {% else %}
+                Pantau status konfirmasi dari penyelenggara secara berkala di Dashboard Relawan.
+              {% endif %}
+            </span>
+          </div>
+          <a class="cta inline" href="{% url 'volunteer:halaman_dashboard_relawan' %}">
+            Lihat Status Pendaftaran
+            <span class="arrow" data-i="arrow"></span>
+          </a>
+        </div>
+
+        {% if not sudah_terdaftar %}
+          {% if pendaftaran and pendaftaran.status == 'CANCELLED' %}
+            <div class="notice" style="margin-bottom:20px">
+              <span class="round" data-i="clock"></span>
+              <div class="txt">
+                <b>Pendaftaran sebelumnya dibatalkan</b>
+                <span>Kamu pernah membatalkan pendaftaran pada kegiatan ini. Selama kuota dan jadwal masih tersedia, kamu dapat mengajukan kembali formulir di bawah ini.</span>
+              </div>
+            </div>
+          {% endif %}
+
+          {% if not bisa_mendaftar and alasan_tidak_bisa_mendaftar %}
+            <div class="notice" id="box-tidak-bisa-daftar" role="alert" style="background:var(--danger-wash);border-color:rgba(180,67,47,.3);margin-bottom:20px">
+              <span class="round" style="background:var(--danger);color:#fff" data-i="clock"></span>
+              <div class="txt">
+                <b>Pendaftaran tidak dapat dilakukan</b>
+                <span>{{ alasan_tidak_bisa_mendaftar }}</span>
+              </div>
+              <a class="btn btn-ghost" href="{% url 'volunteer:halaman_dashboard_relawan' %}">Kembali ke Dashboard</a>
+            </div>
+          {% endif %}
+
+          <!-- Formulir Pendaftaran AJAX -->
+          <form
+            class="tab-pane"
+            id="form-daftar-kegiatan"
+            data-endpoint="{% url 'volunteer:daftar_kegiatan_ajax' kegiatan.pk %}"
+            data-cek-endpoint="{% url 'volunteer:cek_status_pada_kegiatan_ajax' kegiatan.pk %}"
+            data-dashboard-url="{% url 'volunteer:halaman_dashboard_relawan' %}"
+            novalidate
+          >
+            {% csrf_token %}
+            <span class="err" id="err-daftar-global" data-err="__all__"></span>
+
+            <div class="field">
+              <label for="f-motivasi">Motivasi mengikuti kegiatan <span style="color:var(--danger)">*</span></label>
+              <div class="control" style="align-items:flex-start" id="ctrl-motivasi">
+                <textarea
+                  id="f-motivasi"
+                  name="motivasi"
+                  rows="4"
+                  placeholder="Ceritakan alasanmu ingin bergabung dan kontribusi yang ingin kamu berikan (minimal 10 karakter)..."
+                  required
+                >{% if pendaftaran %}{{ pendaftaran.motivasi }}{% endif %}</textarea>
+              </div>
+              <span class="err" data-err="motivasi"></span>
+            </div>
+
+            <div class="grid2">
+              <div class="field">
+                <label for="f-kontak">Kontak darurat (Nomor HP/WA) <span style="color:var(--danger)">*</span></label>
+                <div class="control" id="ctrl-kontak_darurat">
+                  <span data-i="phone"></span>
+                  <input
+                    id="f-kontak"
+                    name="kontak_darurat"
+                    type="tel"
+                    autocomplete="tel"
+                    placeholder="Contoh: +62 812 3456 7890"
+                    value="{% if pendaftaran %}{{ pendaftaran.kontak_darurat }}{% endif %}"
+                    required
+                  >
+                </div>
+                <span class="err" data-err="kontak_darurat"></span>
+              </div>
+
+              <div class="field">
+                <label for="f-kebutuhan">Kebutuhan khusus / kondisi medis (Opsional)</label>
+                <div class="control" id="ctrl-kebutuhan_khusus">
+                  <span data-i="heart"></span>
+                  <input
+                    id="f-kebutuhan"
+                    name="kebutuhan_khusus"
+                    type="text"
+                    placeholder="Contoh: Alergi debu, vegetarian, tidak ada"
+                    value="{% if pendaftaran %}{{ pendaftaran.kebutuhan_khusus }}{% endif %}"
+                  >
+                </div>
+                <span class="err" data-err="kebutuhan_khusus"></span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="f-pengalaman">Pengalaman relevan (Opsional)</label>
+              <div class="control" style="align-items:flex-start" id="ctrl-pengalaman_relevan">
+                <textarea
+                  id="f-pengalaman"
+                  name="pengalaman_relevan"
+                  rows="3"
+                  placeholder="Pernah mengikuti kegiatan relawan lingkungan sebelumnya? Ceritakan secara singkat bila ada..."
+                >{% if pendaftaran %}{{ pendaftaran.pengalaman_relevan }}{% endif %}</textarea>
+              </div>
+              <span class="err" data-err="pengalaman_relevan"></span>
+            </div>
+
+            <label class="check" for="f-komitmen">
+              <input id="f-komitmen" name="komitmen" type="checkbox" checked required>
+              <span class="box" data-i="check"></span>
+              <span>Saya berkomitmen hadir tepat waktu sesuai jadwal kegiatan dan mematuhi panduan keselamatan dari penyelenggara.</span>
+            </label>
+            <span class="err" data-err="komitmen"></span>
+
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px">
+              <button
+                class="cta inline"
+                id="btn-submit-daftar"
+                type="submit"
+                {% if not bisa_mendaftar %}disabled{% endif %}
+              >
+                <span id="btn-submit-daftar-label">Kirim Pendaftaran Relawan</span>
+                <span class="arrow" data-i="arrow"></span>
+              </button>
+              <a class="btn btn-ghost" href="{% url 'volunteer:halaman_dashboard_relawan' %}">Batal</a>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+
+      <!-- Kolom Kanan: Kartu Preview Ringkasan Kegiatan & Tip -->
+      <aside style="display:flex;flex-direction:column;gap:20px">
+        <div class="preview">
+          <div class="dots" style="--dot:rgba(255,255,255,.18);right:-10px;top:-10px;width:120px;height:120px"></div>
+          <span class="over" style="position:relative">Ringkasan Kegiatan</span>
+          <div style="position:relative">
+            <span class="chip yellow sm">{{ kegiatan_info.kategori|default:"Lingkungan" }}</span>
+            <h2 style="margin-top:10px">{{ kegiatan_info.judul }}</h2>
+            <p style="font-size:14px;color:rgba(255,255,255,.84);margin-top:8px;line-height:1.55">
+              {{ kegiatan_info.deskripsi_singkat }}
+            </p>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;color:rgba(255,255,255,.9);position:relative">
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <span data-i="building"></span>
+              <span>Penyelenggara: <b>{{ kegiatan_info.penyelenggara }}</b></span>
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <span data-i="pin"></span>
+              <span>{{ kegiatan_info.lokasi }}</span>
+            </span>
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <span data-i="cal"></span>
+              <span>{{ kegiatan_info.tanggal_display }}</span>
+            </span>
+          </div>
+
+          <div class="mini-stats" style="position:relative">
+            <div>
+              <b id="live-total-kuota">{{ kegiatan_info.kuota }}</b>
+              <small>total kuota</small>
+            </div>
+            <div>
+              <b id="live-terisi-kuota">{{ kegiatan_info.kuota_terisi }}</b>
+              <small>terdaftar</small>
+            </div>
+            <div>
+              <b id="live-sisa-kuota">{{ kegiatan_info.sisa_kuota }}</b>
+              <small>sisa kuota</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip">
+          <span class="round" data-i="shield"></span>
+          <span>
+            <b>Kebijakan Satu Pendaftaran:</b> Setiap relawan hanya dapat mendaftar satu kali pada kegiatan yang sama. Kamu tetap bisa memperbarui informasi atau membatalkan pendaftaran sebelum jadwal kegiatan dimulai.
+          </span>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Toast Notifikasi VoluGreen -->
+  <div class="toast" id="vg-toast" role="status" aria-live="polite">
+    <span data-i="check"></span>
+    <span id="vg-toast-msg"></span>
+  </div>
+
+  <script src="{% static 'js/relawan.js' %}"></script>
+</body>
+</html>
+<!-- ===================================================================== -->
+<!-- === END BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ======== -->
+<!-- ===================================================================== -->
+

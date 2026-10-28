@@ -1,0 +1,69 @@
+{% load static %}
+<!-- ===================================================================== -->
+<!-- === START BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ====== -->
+<!-- Halaman login SEMENTARA untuk mencoba Modul 3 selama Modul 1        -->
+<!-- (Autentikasi) belum ter-merge. Setelah merge, main:login dipakai.   -->
+<!-- ===================================================================== -->
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Masuk · VoluGreen Relawan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/volunteer_modul3.css' %}">
+</head>
+<body>
+  <section class="screen" id="s-masuk">
+    <div class="auth-col">
+      <a class="logo" href="{% url 'main:home' %}"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
+      <form class="inner" method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <span class="eyebrow"><span data-i="sprout"></span>Modul 3 · Alur Relawan</span>
+        <h1>Masuk dan lanjutkan <span class="hl">aksimu</span></h1>
+
+        {% if form.non_field_errors %}
+          <span class="err">Username atau kata sandi salah.</span>
+        {% endif %}
+
+        <div class="field">
+          <label for="id_username">Username</label>
+          <div class="control"><span data-i="user"></span>
+            <input id="id_username" name="username" autocomplete="username" value="{{ form.username.value|default:'' }}" placeholder="Masukkan username" required autofocus>
+          </div>
+        </div>
+        <div class="field">
+          <label for="id_password">Kata sandi</label>
+          <div class="control"><span data-i="lock"></span>
+            <input id="id_password" name="password" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" required>
+          </div>
+        </div>
+
+        <button class="cta block" type="submit">Masuk sebagai Relawan<span class="arrow" data-i="arrow"></span></button>
+
+        <div class="tip">
+          <span class="round" data-i="shield"></span>
+          <span>Halaman login sementara selama Modul 1 belum digabung. Akun demo dibuat dengan
+            <code>python manage.py seed_relawan</code> → username <b>relawan_demo</b>, kata sandi <b>relawan123</b>.</span>
+        </div>
+      </form>
+    </div>
+    <div class="panel" aria-hidden="true">
+      <div class="dots" style="--dot:rgba(255,255,255,.25);left:32px;bottom:32px;width:150px;height:150px"></div>
+      <div class="p1"><img class="photo" src="{% static 'assets/photo.jpg' %}" alt=""></div>
+      <div class="p2"><div><img class="photo" src="{% static 'assets/photo.jpg' %}" alt=""></div></div>
+      <div class="badge-float badge-dark b2"><span class="round" data-i="award"></span>Lacak jam kontribusi<br>dan dampak aksimu</div>
+    </div>
+  </section>
+  <div class="toast" id="vg-toast" role="status" aria-live="polite"><span data-i="check"></span><span id="vg-toast-msg"></span></div>
+  <script src="{% static 'js/relawan.js' %}"></script>
+</body>
+</html>
+<!-- ===================================================================== -->
+<!-- === END BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ======== -->
+<!-- ===================================================================== -->
+

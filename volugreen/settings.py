@@ -40,6 +40,14 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 
 INSTALLED_APPS = [
     'main.apps.MainConfig',
+    'organizer.apps.OrganizerConfig',
+    # =====================================================================
+    # === START BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ======
+    # =====================================================================
+    'volunteer',
+    # =====================================================================
+    # === END BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ========
+    # =====================================================================
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
