@@ -31,7 +31,7 @@ if not SECRET_KEY:
     from django.core.management.utils import get_random_secret_key
     SECRET_KEY = get_random_secret_key()
 
-DEBUG = os.getenv('DEBUG', 'False' if PRODUCTION else 'True').lower() == 'true'
+DEBUG = True  # TEMPORARY: to see actual error on PWS
 ALLOWED_HOSTS = [host.strip() for host in os.getenv(
     'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],rayhan-fairuz51-volugreen.pws.cs.ui.ac.id'
 ).split(',') if host.strip()]
