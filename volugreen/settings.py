@@ -28,16 +28,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
-    if PRODUCTION:
-        raise RuntimeError('DJANGO_SECRET_KEY must be configured in production.')
-    SECRET_KEY = 'local-development-only-volugreen-key'
+    from django.core.management.utils import get_random_secret_key
+    SECRET_KEY = get_random_secret_key()
 
 DEBUG = os.getenv('DEBUG', 'False' if PRODUCTION else 'True').lower() == 'true'
 ALLOWED_HOSTS = [host.strip() for host in os.getenv(
-    'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]'
+    'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],rayhan-fairuz51-volugreen.pws.cs.ui.ac.id'
 ).split(',') if host.strip()]
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv(
-    'CSRF_TRUSTED_ORIGINS', ''
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost:8000,http://127.0.0.1:8000,https://rayhan-fairuz51-volugreen.pws.cs.ui.ac.id'
 ).split(',') if origin.strip()]
 
 
