@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <link rel="stylesheet" href="{% static 'css/organizer.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'css/organizer.css' %}?v=7">
 </head>
 <body class="organizer-body">
   <a class="organizer-skip" href="#konten">Lewati ke konten</a>
@@ -19,6 +19,7 @@
       <nav aria-label="Navigasi penyelenggara">
         <a href="{% url 'organizer:dashboard' %}"{% if page == 'overview' %} aria-current="page"{% endif %}>Ringkasan</a>
         <a href="{% url 'organizer:activities' %}"{% if page == 'activities' %} aria-current="page"{% endif %}>Kegiatan</a>
+        <a href="{% url 'organizer:activities' %}#dampak">Laporan dampak</a>
         <a href="{% url 'main:profile_settings' %}">Profil organisasi</a>
       </nav>
       <div class="organizer-account"><span>{{ profile.organization_name|default:request.user.username }}</span><a href="{% url 'main:logout' %}">Keluar</a></div>
@@ -26,7 +27,6 @@
   </header>
 
   <main class="wrap organizer-main" id="konten">
-    {% if submission_complete %}<section class="organizer-submission-notice" role="status" aria-live="polite" data-submission-notice><span class="organizer-submission-mark" aria-hidden="true">✓</span><div><span class="eyebrow">KEGIATAN TERKIRIM</span><h2>Kegiatan sedang ditinjau admin</h2><p>Setelah disetujui, kegiatan akan tampil di Cari kegiatan dan bisa diikuti relawan.</p><small>Kembali ke ringkasan dalam <strong data-submission-countdown>5</strong> detik.</small></div></section>{% endif %}
     {% if messages %}<div class="organizer-messages">{% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
     {% if page == 'overview' %}
     <section class="organizer-heading" id="ringkasan" aria-labelledby="welcome-title">
@@ -80,7 +80,7 @@
                 {% if activity.status_publikasi != 'published' %}<a class="btn btn-ghost" href="?edit={{ activity.pk }}#form-kegiatan">Ubah</a>{% endif %}
                 {% if activity.status_publikasi != 'published' %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete_activity"><input type="hidden" name="activity_id" value="{{ activity.pk }}"><button class="btn btn-text" type="submit" onclick="return confirm('Hapus draft ini?')">Hapus</button></form>{% endif %}
               </div>
-              {% if activity.status_publikasi == 'draft' %}<small class="organizer-review-note">Draft akan diperiksa admin sebelum diterbitkan.</small>{% elif activity.status_publikasi == 'published' %}<small class="organizer-review-note">Kegiatan sudah dapat ditemukan relawan.</small>{% endif %}
+              {% if activity.status_publikasi == 'draft' %}<small class="organizer-review-note">Draft akan diperiksa admin sebelum diterbitkan.</small>{% elif activity.status_publikasi == 'published' %}<small class="organizer-review-note">{% if activity.event_is_over %}Waktu mulai sudah lewat; kegiatan tampil di bagian Kegiatan sebelumnya pada Cari kegiatan.{% else %}Kegiatan sudah dapat ditemukan dan diikuti relawan.{% endif %}</small>{% endif %}
             </article>
           {% endfor %}
         </div>
@@ -100,14 +100,41 @@
               <a class="organizer-map-link" data-osm-link href="https://www.openstreetmap.org/" target="_blank" rel="noopener" hidden>Buka peta lebih besar <span aria-hidden="true">↗</span></a>
             </div>
           </div>
-          <div class="organizer-form-actions"><button class="cta inline" type="submit">Kirim kegiatan</button>{% if request.GET.edit %}<a class="btn btn-text" href="{% url 'organizer:dashboard' %}#lowongan">Batal</a>{% endif %}</div>
+          <div class="organizer-form-actions"><button class="cta inline" type="submit">Kirim kegiatan <span class="arrow" aria-hidden="true">↗</span></button>{% if request.GET.edit %}<a class="btn btn-text" href="{% url 'organizer:activities' %}#lowongan">Batal</a>{% endif %}</div>
         </form>
       </section>
+    </section>
+    <section class="organizer-section" id="dampak" aria-labelledby="dampak-title">
+      <div class="organizer-section-title"><div><span class="eyebrow">DAMPAK</span><h2 id="dampak-title">Laporan dampak</h2><p class="organizer-section-lede">Catat hasil kegiatan yang sudah selesai dan diterbitkan.</p></div></div>
+      {% if impact_activities %}
+        {% for activity in impact_activities %}
+          <article class="organizer-impact-card">
+            <h3>{{ activity.nama }}</h3>
+            <form method="post" class="organizer-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="save_impact">
+              <input type="hidden" name="activity_id" value="{{ activity.pk }}">
+              {% if activity.impact_form.non_field_errors %}<div class="organizer-form-errors" role="alert">{{ activity.impact_form.non_field_errors }}</div>{% endif %}
+              <div class="organizer-form-grid">
+                {% for field in activity.impact_form %}
+                  <div class="organizer-field {% if field.name == 'catatan' %}wide{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+                    {% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+              <button class="btn btn-ghost" type="submit">Simpan laporan</button>
+            </form>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="organizer-empty">Laporan dapat dibuat setelah kegiatan terbit selesai.</p>
+      {% endif %}
     </section>
     {% endif %}
 
   </main>
-  <script src="{% static 'js/organizer.js' %}?v=4"></script>
+  <script src="{% static 'js/organizer.js' %}?v=5"></script>
   <script src="{% static 'js/osm.js' %}?v=3"></script>
 </body>
 </html>

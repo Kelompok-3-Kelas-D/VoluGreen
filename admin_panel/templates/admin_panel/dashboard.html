@@ -5,7 +5,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin · VoluGreen</title>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <link rel="stylesheet" href="{% static 'admin_panel/css/admin.css' %}">
+  <link rel="stylesheet" href="{% static 'admin_panel/css/admin.css' %}?v=2">
 </head>
 <body class="admin-body">
   <div class="admin-layout">
@@ -19,7 +19,7 @@
         <button type="button" class="side-nav-link" data-admin-page-target="categories" data-title="Kategori" data-description="Atur kategori yang dipakai untuk mengelompokkan kegiatan."><span class="nav-index">04</span>Kategori</button>
         <button type="button" class="side-nav-link" data-admin-page-target="reports" data-title="Laporan pengguna" data-description="Tinjau dan perbarui status laporan pengguna."><span class="nav-index">05</span>Laporan <span class="nav-count">{{ open_reports }}</span></button>
       </nav>
-      <div class="sidebar-bottom"><div class="sidebar-account"><span class="account-avatar">{{ request.user.get_username|slice:":1"|upper }}</span><span class="account-name"><strong>{{ request.user.get_username }}</strong><small>Administrator</small></span></div><a class="sidebar-link" href="/admin/">Pengaturan Django ↗</a><a class="sidebar-link signout" href="/admin/logout/">Keluar</a></div>
+      <div class="sidebar-bottom"><div class="sidebar-account"><span class="account-avatar">{{ request.user.get_username|slice:":1"|upper }}</span><span class="account-name"><strong>{{ request.user.get_username }}</strong><small>Administrator</small></span></div><a class="sidebar-link" href="/admin/">Pengaturan Django ↗</a><a class="sidebar-link signout" href="{% url 'main:logout' %}">Keluar</a></div>
     </aside>
     <button class="sidebar-backdrop" type="button" aria-label="Tutup navigasi" data-sidebar-close hidden></button>
     <div class="admin-workspace">
@@ -45,7 +45,33 @@
 
     <section class="admin-page" data-admin-page="activities" hidden><section class="admin-card" id="kegiatan"><div class="section-title"><div><h2>Moderasi kegiatan</h2><p class="section-desc">Tinjau detail kegiatan sebelum tampil kepada relawan.</p></div><span class="chip">Antrian admin</span></div>
       {% if activities %}<div class="table-wrap"><table><thead><tr><th>Kegiatan</th><th>Penyelenggara</th><th>Kategori</th><th>Tanggal</th><th>Status / keputusan</th></tr></thead><tbody>
-      {% for activity in activities %}<tr><td><strong>{{ activity.title }}</strong><small>{{ activity.location|default:"Lokasi belum diisi" }}</small></td><td>{{ activity.organizer_name }}</td><td>{{ activity.category|default:"—" }}</td><td>{{ activity.event_date|date:"d M Y"|default:"—" }}</td><td>{% if activity.status == "pending" %}<form method="post" class="review-form">{% csrf_token %}<input type="hidden" name="return_page" value="activities"><input type="hidden" name="activity_id" value="{{ activity.id }}"><input type="hidden" name="activity_source" value="{{ activity.source }}">{% if activity.source == "moderation" %}<input name="moderator_note" placeholder="Catatan (opsional)" aria-label="Catatan moderator">{% endif %}<button class="button small" name="action" value="approve_activity">Setujui</button><button class="button small danger" name="action" value="reject_activity">Tolak</button></form>{% else %}<span class="status {{ activity.status }}">{{ activity.status_display }}</span>{% if activity.moderator_note %}<small>{{ activity.moderator_note }}</small>{% endif %}{% endif %}</td></tr>{% endfor %}
+      {% for activity in activities %}
+        <tr>
+          <td><strong>{{ activity.title }}</strong><small>{{ activity.location|default:"Lokasi belum diisi" }}</small></td>
+          <td>{{ activity.organizer_name }}</td>
+          <td>{{ activity.category|default:"—" }}</td>
+          <td>
+            {% if activity.source == "organizer" %}{{ activity.event_date|date:"d M Y, H:i" }}{% else %}{{ activity.event_date|date:"d M Y"|default:"—" }}{% endif %}
+            {% if activity.event_is_past %}<small class="admin-past-note">Jadwal lewat · tampil di Kegiatan sebelumnya</small>{% endif %}
+          </td>
+          <td>
+            {% if activity.status == "pending" %}
+              <form method="post" class="review-form">
+                {% csrf_token %}
+                <input type="hidden" name="return_page" value="activities">
+                <input type="hidden" name="activity_id" value="{{ activity.id }}">
+                <input type="hidden" name="activity_source" value="{{ activity.source }}">
+                {% if activity.source == "moderation" %}<input name="moderator_note" placeholder="Catatan (opsional)" aria-label="Catatan moderator">{% endif %}
+                <button class="button small" name="action" value="approve_activity">Setujui</button>
+                <button class="button small danger" name="action" value="reject_activity">Tolak</button>
+              </form>
+            {% else %}
+              <span class="status {{ activity.status }}">{{ activity.status_display }}</span>
+              {% if activity.moderator_note %}<small>{{ activity.moderator_note }}</small>{% endif %}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
       </tbody></table></div>{% else %}<p class="empty">Belum ada pengajuan kegiatan.</p>{% endif %}
     </section></section>
 

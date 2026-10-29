@@ -50,6 +50,7 @@ def dashboard(request):
                 organization.save(update_fields=["status", "verified_at", "verified_by"])
                 messages.success(request, "Status organisasi berhasil diperbarui.")
             elif action in {"approve_activity", "reject_activity"}:
+                published_after_start = False
                 if request.POST.get("activity_source") == "organizer":
                     activity = Kegiatan.objects.get(pk=request.POST.get("activity_id"))
                     organization_verified = OrganizationSubmission.objects.filter(
@@ -66,6 +67,10 @@ def dashboard(request):
                         else Kegiatan.StatusPublikasi.ARCHIVED
                     )
                     activity.save(update_fields=["status_publikasi", "diperbarui_pada"])
+                    published_after_start = (
+                        action == "approve_activity"
+                        and activity.tanggal_mulai < timezone.now()
+                    )
                 else:
                     activity = ActivityModeration.objects.get(
                         pk=request.POST.get("activity_id")
@@ -81,7 +86,14 @@ def dashboard(request):
                     activity.save(
                         update_fields=["status", "moderator_note", "reviewed_by", "reviewed_at"]
                     )
-                messages.success(request, "Keputusan moderasi kegiatan tersimpan.")
+                if published_after_start:
+                    messages.warning(
+                        request,
+                        "Kegiatan diterbitkan, tetapi waktu mulainya sudah lewat. "
+                        "Kegiatan muncul di bagian Kegiatan sebelumnya dan tidak menerima pendaftaran.",
+                    )
+                else:
+                    messages.success(request, "Keputusan moderasi kegiatan tersimpan.")
             elif action == "update_report":
                 report = UserReport.objects.get(pk=request.POST.get("report_id"))
                 report.status = request.POST.get("status")
@@ -122,6 +134,7 @@ def dashboard(request):
             "status_display": activity.get_status_display(),
             "moderator_note": activity.moderator_note,
             "source": "moderation",
+            "event_is_past": False,
         })
     for activity in Kegiatan.objects.select_related("organizer", "kategori"):
         profile = getattr(activity.organizer, "profile", None)
@@ -146,6 +159,7 @@ def dashboard(request):
             "status_display": status_display,
             "moderator_note": "",
             "source": "organizer",
+            "event_is_past": activity.tanggal_mulai < timezone.now(),
         })
 
     pending_activities = (

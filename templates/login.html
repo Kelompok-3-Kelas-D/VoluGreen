@@ -73,7 +73,7 @@
 
       <p style="font-size:14.5px;color:var(--muted)">
         Belum punya akun?
-        <a class="link-strong" href="{% url 'main:register' %}?role={{ requested_role|urlencode }}{% if next %}&amp;next={{ next|urlencode }}{% endif %}" style="text-decoration:underline">Daftar sekarang</a>
+        <a class="link-strong" id="login-register-link" href="{% url 'main:register' %}?role={{ requested_role|urlencode }}{% if next %}&amp;next={{ next|urlencode }}{% endif %}" style="text-decoration:underline">Daftar sekarang</a>
       </p>
     </form>
   </div>
@@ -93,5 +93,5 @@
 {% endblock content %}
 
 {% block scripts %}
-<script src="{% static 'js/auth.js' %}?v=3"></script>
+<script src="{% static 'js/auth.js' %}?v=4"></script>
 {% endblock scripts %}

@@ -8,9 +8,9 @@ from volunteer.models import PendaftaranRelawan, STATUS_MENGISI_KUOTA
 from volunteer.utils import inisial_pengguna
 
 def index(request):
+    now = timezone.now()
     public_activities = Kegiatan.objects.filter(
         status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
-        tanggal_mulai__gte=timezone.now(),
     ).select_related("kategori", "organizer", "organizer__profile")
 
     query = request.GET.get("q", "").strip()
@@ -49,19 +49,20 @@ def index(request):
         )
     status_labels = dict(PendaftaranRelawan.Status.choices)
     for activity in activity_list:
+        activity.is_past = activity.tanggal_mulai < now
         activity.available_spots = max(activity.kuota - reserved_counts.get(activity.pk, 0), 0)
         activity.application_status = application_statuses.get(activity.pk, "")
         activity.application_status_display = status_labels.get(activity.application_status, "")
+    upcoming_activities = [activity for activity in activity_list if not activity.is_past]
+    past_activities = [activity for activity in reversed(activity_list) if activity.is_past]
 
     categories = Category.objects.filter(
         is_active=True,
         organizer_activities__status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
-        organizer_activities__tanggal_mulai__gte=timezone.now(),
     ).distinct()
     cities = (
         Kegiatan.objects.filter(
             status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
-            tanggal_mulai__gte=timezone.now(),
         )
         .exclude(kota="")
         .order_by("kota")
@@ -72,7 +73,8 @@ def index(request):
         request,
         "eksplorasi/index.html",
         {
-            "activities": activity_list,
+            "activities": upcoming_activities,
+            "past_activities": past_activities,
             "categories": categories,
             "cities": cities,
             "query": query,

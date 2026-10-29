@@ -1,0 +1,44 @@
+<article class="explore-card card{% if activity.is_past %} explore-card--past{% endif %}">
+  <div class="explore-card-top">
+    <span class="chip sm">{{ activity.kategori.name }}</span>
+    <div class="explore-card-date">
+      {% if activity.is_past %}<span class="explore-ended-badge">Jadwal lewat</span>{% endif %}
+      <time datetime="{{ activity.tanggal_mulai|date:'c' }}">{{ activity.tanggal_mulai|date:"d/m/Y · H:i" }}</time>
+    </div>
+  </div>
+  <h3>{{ activity.nama }}</h3>
+  <p class="explore-description">{{ activity.deskripsi }}</p>
+  <dl class="explore-meta">
+    <div><dt>Penyelenggara</dt><dd>{% if activity.organizer.profile.organization_name %}{{ activity.organizer.profile.organization_name }}{% else %}{{ activity.organizer.get_username }}{% endif %}</dd></div>
+    <div><dt>Lokasi</dt><dd>{{ activity.nama_lokasi }}{% if activity.kota %}, {{ activity.kota }}{% endif %}</dd></div>
+    <div><dt>{% if activity.is_past %}Kuota{% else %}Sisa kuota{% endif %}</dt><dd>{% if activity.is_past %}{{ activity.kuota }}{% else %}{{ activity.available_spots }} dari {{ activity.kuota }}{% endif %} relawan</dd></div>
+  </dl>
+  <a class="explore-map-link" href="{% if activity.punya_koordinat %}https://www.openstreetmap.org/?mlat={{ activity.latitude }}&amp;mlon={{ activity.longitude }}#map=16/{{ activity.latitude }}/{{ activity.longitude }}{% else %}https://www.openstreetmap.org/search?query={{ activity.nama_lokasi|add:' '|add:activity.kota|urlencode }}{% endif %}" target="_blank" rel="noopener noreferrer">Lihat lokasi di OpenStreetMap <span aria-hidden="true">↗</span></a>
+  <div class="explore-card-actions">
+    {% if activity.is_past %}
+      <span class="explore-ended-status">Waktu mulai sudah lewat; pendaftaran ditutup.</span>
+      {% if request.user.is_authenticated and request.user.profile.role == 'volunteer' and activity.application_status %}
+        <a class="explore-history-link" href="{% url 'volunteer:halaman_dashboard_relawan' %}">Lihat status pendaftaran</a>
+      {% endif %}
+    {% elif request.user.is_authenticated and request.user.profile.role == 'volunteer' %}
+      {% if activity.application_status == 'PENDING' or activity.application_status == 'ACCEPTED' %}
+        <span class="explore-application-status">{{ activity.application_status_display }} · <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Lihat pendaftaran</a></span>
+      {% elif activity.application_status == 'COMPLETED' or activity.application_status == 'ABSENT' %}
+        <span class="explore-application-status">{{ activity.application_status_display }} · <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Lihat riwayat</a></span>
+      {% elif activity.application_status == 'REJECTED' %}
+        <span class="explore-application-status">{{ activity.application_status_display }} · <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Lihat status</a></span>
+      {% elif activity.available_spots > 0 %}
+        <a class="btn btn-apply" href="{% url 'volunteer:halaman_daftar_kegiatan' activity.pk %}">{% if activity.application_status == 'CANCELLED' %}Daftar lagi{% else %}Ikuti kegiatan{% endif %}<span aria-hidden="true">↗</span></a>
+      {% else %}<span class="explore-full">Kuota penuh</span>{% endif %}
+    {% elif request.user.is_authenticated %}
+      <span class="explore-application-status">Pendaftaran kegiatan hanya untuk akun relawan.</span>
+    {% else %}
+      {% if activity.available_spots > 0 %}
+        <div class="explore-guest-action">
+          <a class="btn btn-guest-login" href="{% url 'main:login' %}?role=volunteer&amp;next={% url 'volunteer:halaman_daftar_kegiatan' activity.pk %}">Masuk untuk ikut kegiatan <span class="guest-login-arrow" aria-hidden="true">↗</span></a>
+          <span>Belum punya akun? <a href="{% url 'main:register' %}?role=volunteer&amp;next={% url 'volunteer:halaman_daftar_kegiatan' activity.pk %}">Daftar sebagai relawan</a></span>
+        </div>
+      {% else %}<span class="explore-full">Kuota penuh</span>{% endif %}
+    {% endif %}
+  </div>
+</article>
