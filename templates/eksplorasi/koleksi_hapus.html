@@ -1,0 +1,3 @@
+{% load static %}
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hapus koleksi · VoluGreen</title><link rel="stylesheet" href="{% static 'css/style.css' %}"><link rel="stylesheet" href="{% static 'css/eksplorasi.css' %}"></head>
+<body class="explore-body"><main class="wrap explore-main"><section class="explore-card card collection-form-card"><h1>Hapus koleksi?</h1><p>Koleksi “{{ koleksi.nama }}” dan daftar simpanannya akan dihapus.</p><form method="post">{% csrf_token %}<button class="btn btn-save" type="submit">Ya, hapus koleksi</button><a href="{% url 'eksplorasi:koleksi_detail' koleksi.pk %}">Batalkan</a></form></section></main></body></html>

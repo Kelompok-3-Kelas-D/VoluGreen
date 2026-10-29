@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="{% static 'css/style.css' %}?v=13">
   <link rel="stylesheet" href="{% static 'css/app-shell.css' %}?v=2">
-  <link rel="stylesheet" href="{% static 'css/eksplorasi.css' %}?v=11">
+  <link rel="stylesheet" href="{% static 'css/eksplorasi.css' %}?v=10">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 </head>
 <body class="explore-body">
   <header class="{% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}app-top{% else %}explore-top{% endif %}">
@@ -19,17 +20,18 @@
       <nav class="{% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}app-nav{% endif %}" aria-label="Navigasi utama">
         {% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}
           <a href="#kegiatan" aria-current="page">Cari kegiatan</a>
-          <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>
+          <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>
+          <a href="{% url 'eksplorasi:koleksi_daftar' %}">Koleksi</a>
           <a href="{% url 'main:profile_settings' %}">Profil</a>
         {% elif request.user.is_authenticated %}
           <a href="#kegiatan" aria-current="page">Cari kegiatan</a>
-          <a href="{% url 'main:home' %}#tentang">Cara kerja</a>
+          <a href="#cara-kerja">Cara kerja</a>
           <a href="{% url 'organizer:dashboard' %}">Dashboard</a>
           <a href="{% url 'main:logout' %}">Keluar</a>
         {% else %}
           <a href="#kegiatan" aria-current="page">Cari kegiatan</a>
-          <a href="{% url 'main:home' %}#tentang">Cara kerja</a>
-          <a class="explore-login" href="{% url 'main:login' %}">Masuk</a>
+          <a href="#cara-kerja">Cara kerja</a>
+          <a href="{% url 'main:login' %}">Masuk</a>
           <button class="btn btn-ghost explore-register" type="button" data-open-signup>Daftar</button>
         {% endif %}
       </nav>
@@ -58,29 +60,79 @@
         <label class="field explore-query"><span class="field-label">Cari kegiatan</span><input name="q" value="{{ query }}" placeholder="Nama kegiatan, organisasi, atau lokasi" type="search" list="activity-suggestions" autocomplete="off" data-suggest-url="{% url 'mock_api:activities' %}"><datalist id="activity-suggestions"></datalist></label>
         <label class="field"><span class="field-label">Kota</span><select name="kota"><option value="">Semua kota yang tersedia</option>{% for city in cities %}<option value="{{ city }}" {% if selected_city == city %}selected{% endif %}>{{ city }}</option>{% endfor %}</select></label>
         <label class="field"><span class="field-label">Kategori</span><select name="kategori"><option value="">Semua kategori</option>{% for category in categories %}<option value="{{ category.pk }}" {% if selected_category == category.pk|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></label>
+        <label class="field"><span class="field-label">Tanggal mulai</span><input name="dari" type="date" value="{{ date_from }}"></label>
+        <label class="field"><span class="field-label">Sampai tanggal</span><input name="sampai" type="date" value="{{ date_to }}"></label>
         <button class="cta inline explore-submit" type="submit">Cari <span class="arrow" aria-hidden="true">↗</span></button>
       </form>
       <p class="api-search-status" id="api-search-status" aria-live="polite"></p>
     </section>
 
+    <section class="explore-map-section card" aria-labelledby="explore-map-title">
+      <div class="explore-heading"><div><span class="eyebrow">PETA KEGIATAN</span><h2 id="explore-map-title">Lokasi aksi lingkungan</h2></div><span class="explore-count">{{ markers|length }} titik</span></div>
+      <div id="activity-map" role="region" aria-label="Peta lokasi kegiatan mendatang"></div>
+      {% if tanpa_koordinat %}<p class="explore-map-note">{{ tanpa_koordinat }} kegiatan belum memiliki koordinat dan belum bisa ditampilkan pada peta.</p>{% endif %}
+    </section>
+
+    <section class="explore-how" id="cara-kerja" aria-labelledby="explore-how-title">
+      <span class="eyebrow">MULAI BERKONTRIBUSI</span>
+      <h2 id="explore-how-title">Cara ikut kegiatan</h2>
+      <ol>
+        <li><span>01</span><div><strong>Temukan aksi yang cocok</strong><p>Gunakan pencarian dan filter untuk melihat kegiatan mendatang di kotamu.</p></div></li>
+        <li><span>02</span><div><strong>Baca detail dan lokasinya</strong><p>Periksa informasi kegiatan dan buka peta untuk mengetahui titik lokasinya.</p></div></li>
+        <li><span>03</span><div><strong>Daftar sebagai relawan</strong><p>Masuk atau buat akun relawan, lalu kirim pendaftaran ke penyelenggara.</p></div></li>
+      </ol>
+    </section>
+
     <div class="explore-layout">
       <section class="explore-results" id="kegiatan">
-        <div class="explore-heading"><div><span class="eyebrow">DIREKTORI</span><h2>Kegiatan mendatang</h2></div><span class="explore-count">{{ activities|length }} kegiatan</span></div>
+        <div class="explore-heading"><div><span class="eyebrow">DIREKTORI</span><h2>Kegiatan terbit</h2></div><span class="explore-count">{{ activities|length }} kegiatan</span></div>
         <div class="explore-list">
           {% for activity in activities %}
-            {% include "eksplorasi/_activity_card.html" %}
+            <article class="explore-card card">
+              <div class="explore-card-top"><span class="chip sm">{{ activity.kategori.name }}</span><time datetime="{{ activity.tanggal_mulai|date:'c' }}">{{ activity.tanggal_mulai|date:"d/m/Y · H:i" }}</time></div>
+              <h3><a class="explore-detail-link" href="{% url 'eksplorasi:detail' activity.pk %}">{{ activity.nama }}</a></h3>
+              <p class="explore-description">{{ activity.deskripsi }}</p>
+              <dl class="explore-meta"><div><dt>Penyelenggara</dt><dd>{% if activity.organizer.profile.organization_name %}{{ activity.organizer.profile.organization_name }}{% else %}{{ activity.organizer.get_username }}{% endif %}</dd></div><div><dt>Lokasi</dt><dd>{{ activity.nama_lokasi }}{% if activity.kota %}, {{ activity.kota }}{% endif %}</dd></div><div><dt>Sisa kuota</dt><dd>{{ activity.available_spots }} dari {{ activity.kuota }} relawan</dd></div></dl>
+              <a class="explore-map-link" href="{% if activity.punya_koordinat %}https://www.openstreetmap.org/?mlat={{ activity.latitude }}&amp;mlon={{ activity.longitude }}#map=16/{{ activity.latitude }}/{{ activity.longitude }}{% else %}https://www.openstreetmap.org/search?query={{ activity.nama_lokasi|add:' '|add:activity.kota|urlencode }}{% endif %}" target="_blank" rel="noopener noreferrer">Lihat lokasi di OpenStreetMap <span aria-hidden="true">↗</span></a>
+              {% if request.user.is_authenticated %}<div class="explore-save-row"><span class="save-label">Koleksi pribadi</span>{% for collection in collection_list %}<form method="post" action="{% url 'eksplorasi:koleksi_toggle' collection.pk activity.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-save" type="submit">{% if collection.pk in activity.saved_collection_ids %}Hapus dari {{ collection.nama }}{% else %}Simpan di {{ collection.nama }}{% endif %}</button></form>{% empty %}<a class="btn btn-save" href="{% url 'eksplorasi:koleksi_buat' %}">Buat koleksi untuk menyimpan</a>{% endfor %}<a class="collection-manage-link" href="{% url 'eksplorasi:koleksi_daftar' %}">Kelola koleksi</a></div>{% else %}<p class="explore-save-hint"><a href="{% url 'main:login' %}?role=volunteer">Masuk sebagai relawan</a> untuk menyimpan kegiatan ke koleksi.</p>{% endif %}
+              <div class="explore-card-actions">
+                {% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}
+                  {% if activity.application_status == 'PENDING' or activity.application_status == 'ACCEPTED' %}
+                    <span class="explore-application-status">{{ activity.application_status_display }} · <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Lihat pendaftaran</a></span>
+                  {% elif activity.application_status == 'COMPLETED' or activity.application_status == 'ABSENT' %}
+                    <span class="explore-application-status">{{ activity.application_status_display }} · <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Lihat riwayat</a></span>
+                  {% elif activity.application_status == 'REJECTED' %}
+                    <span class="explore-application-status">{{ activity.application_status_display }} · <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Lihat status</a></span>
+                  {% elif activity.available_spots > 0 %}
+                    <a class="btn btn-apply" href="{% url 'volunteer:halaman_daftar_kegiatan' activity.pk %}">{% if activity.application_status == 'CANCELLED' %}Daftar lagi{% else %}Ikuti kegiatan{% endif %}<span aria-hidden="true">↗</span></a>
+                  {% else %}<span class="explore-full">Kuota penuh</span>{% endif %}
+                {% elif request.user.is_authenticated %}
+                  <span class="explore-application-status">Pendaftaran kegiatan hanya untuk akun relawan.</span>
+                {% else %}
+                  {% if activity.available_spots > 0 %}<a class="btn btn-apply" href="{% url 'main:login' %}?role=volunteer&amp;next={% url 'volunteer:halaman_daftar_kegiatan' activity.pk %}">Masuk sebagai relawan untuk daftar <span aria-hidden="true">↗</span></a>{% else %}<span class="explore-full">Kuota penuh</span>{% endif %}
+                {% endif %}
+              </div>
+            </article>
           {% empty %}
-            <div class="explore-empty card"><span class="explore-empty-mark" aria-hidden="true">↗</span><h3>Belum ada kegiatan mendatang yang cocok</h3><p>{% if past_activities %}Kegiatan terbit dengan jadwal yang sudah lewat bisa dilihat di bagian Kegiatan sebelumnya.{% else %}Coba ubah filter atau periksa lagi nanti.{% endif %}</p></div>
+            <div class="explore-empty card"><span class="explore-empty-mark" aria-hidden="true">↗</span><h3>Belum ada kegiatan yang cocok</h3><p>Direktori hanya menampilkan kegiatan mendatang yang sudah diterbitkan. Coba ubah filter atau periksa lagi nanti.</p></div>
           {% endfor %}
         </div>
         {% if past_activities %}
-          <section class="explore-past" id="kegiatan-sebelumnya" aria-labelledby="past-heading">
-            <div class="explore-heading"><div><span class="eyebrow">ARSIP KEGIATAN TERBIT</span><h2 id="past-heading">Kegiatan sebelumnya</h2></div><span class="explore-count">{{ past_activities|length }} kegiatan</span></div>
-            <p class="explore-past-note">Waktu mulai kegiatan berikut sudah lewat. Informasinya tetap bisa dilihat, tetapi pendaftaran telah ditutup.</p>
-            <div class="explore-list">
-              {% for activity in past_activities %}{% include "eksplorasi/_activity_card.html" %}{% endfor %}
-            </div>
-          </section>
+        <section class="explore-past" id="kegiatan-sebelumnya" aria-labelledby="explore-past-title">
+          <div class="explore-heading"><div><span class="eyebrow">ARSIP KEGIATAN</span><h2 id="explore-past-title">Kegiatan yang sudah dimulai</h2></div><span class="explore-count">{{ past_activities|length }} kegiatan</span></div>
+          <p class="explore-past-note">Kegiatan berikut sudah dimulai. Pendaftaran relawan sudah ditutup.</p>
+          <div class="explore-list">
+            {% for activity in past_activities %}
+            <article class="explore-card explore-card--past card">
+              <div class="explore-card-top"><span class="chip sm">{{ activity.kategori.name }}</span><div class="explore-card-date"><time datetime="{{ activity.tanggal_mulai|date:'c' }}">{{ activity.tanggal_mulai|date:"d/m/Y · H:i" }}</time><span class="explore-ended-badge">Sudah dimulai</span></div></div>
+              <h3><a class="explore-detail-link" href="{% url 'eksplorasi:detail' activity.pk %}">{{ activity.nama }}</a></h3>
+              <p class="explore-description">{{ activity.deskripsi }}</p>
+              <dl class="explore-meta"><div><dt>Penyelenggara</dt><dd>{% if activity.organizer.profile.organization_name %}{{ activity.organizer.profile.organization_name }}{% else %}{{ activity.organizer.get_username }}{% endif %}</dd></div><div><dt>Lokasi</dt><dd>{{ activity.nama_lokasi }}{% if activity.kota %}, {{ activity.kota }}{% endif %}</dd></div></dl>
+              <span class="explore-ended-status">Waktu mulai sudah lewat; pendaftaran ditutup.</span>
+            </article>
+            {% endfor %}
+          </div>
+        </section>
         {% endif %}
       </section>
 
@@ -102,6 +154,9 @@
   </dialog>
   <script src="{% static 'js/signup-dialog.js' %}"></script>
   {% endif %}
-  <script src="{% static 'js/eksplorasi-api.js' %}?v=4"></script>
+  <script src="{% static 'js/eksplorasi-api.js' %}?v=3"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  {{ markers|json_script:"activity-map-markers" }}
+  <script src="{% static 'js/eksplorasi-map.js' %}?v=2"></script>
 </body>
 </html>

@@ -1,0 +1,79 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{{ kegiatan.nama }} · VoluGreen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=13">
+    <link rel="stylesheet" href="{% static 'css/app-shell.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/eksplorasi.css' %}?v=10">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    </head>
+    <body class="explore-body">
+    <header class="{% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}app-top{% else %}explore-top{% endif %}">
+        <div class="wrap {% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}volunteer-explore-top-inner{% else %}explore-top-inner{% endif %}">
+        <a class="logo" href="{% url 'main:home' %}"><span class="logo-mark" aria-hidden="true">🌱</span>VoluGreen</a>
+        <nav class="{% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}app-nav{% endif %}" aria-label="Navigasi utama">
+            <a href="{% url 'eksplorasi:index' %}#kegiatan">Cari kegiatan</a>
+            {% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}
+            <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>
+            <a href="{% url 'eksplorasi:koleksi_daftar' %}">Koleksi</a>
+            <a href="{% url 'main:profile_settings' %}">Profil</a>
+            {% elif request.user.is_authenticated %}
+            <a href="{% url 'organizer:dashboard' %}">Dashboard</a><a href="{% url 'main:logout' %}">Keluar</a>
+            {% else %}<a href="{% url 'main:login' %}">Masuk</a>{% endif %}
+        </nav>
+        </div>
+    </header>
+    <main class="wrap explore-main explore-detail">
+        <a class="explore-map-link" href="{% url 'eksplorasi:index' %}#kegiatan">← Kembali ke kegiatan</a>
+        {% if messages %}<div class="explore-messages" aria-live="polite">{% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+        <div class="explore-detail-grid">
+        <article class="explore-card card explore-detail-card">
+            <div class="explore-card-top"><span class="chip sm">{{ kegiatan.kategori.name }}</span><time datetime="{{ kegiatan.tanggal_mulai|date:'c' }}">{{ kegiatan.tanggal_mulai|date:'d/m/Y · H:i' }}</time></div>
+            <h1>{{ kegiatan.nama }}</h1>
+            <p class="explore-description">{{ kegiatan.deskripsi }}</p>
+            <dl class="explore-meta">
+            <div><dt>Penyelenggara</dt><dd>{% if kegiatan.organizer.profile.organization_name %}{{ kegiatan.organizer.profile.organization_name }}{% else %}{{ kegiatan.organizer.get_username }}{% endif %}</dd></div>
+            <div><dt>Lokasi</dt><dd>{{ kegiatan.nama_lokasi }}{% if kegiatan.kota %}, {{ kegiatan.kota }}{% endif %}</dd></div>
+            <div><dt>Sisa kuota</dt><dd>{{ kegiatan.available_spots }} dari {{ kegiatan.kuota }} relawan</dd></div>
+            </dl>
+            {% if kegiatan.punya_koordinat %}
+            <div id="detail-map" data-lat="{{ peta.lat }}" data-lng="{{ peta.lng }}" data-title="{{ peta.nama }}" role="region" aria-label="Peta lokasi kegiatan"></div>
+            <a class="explore-map-link" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat={{ kegiatan.latitude }}&amp;mlon={{ kegiatan.longitude }}#map=16/{{ kegiatan.latitude }}/{{ kegiatan.longitude }}">Buka lokasi di OpenStreetMap ↗</a>
+            {% else %}<p class="explore-location-empty">Lokasi kegiatan ini belum memiliki koordinat untuk ditampilkan di peta.</p>{% endif %}
+        </article>
+        <aside class="explore-collection-panel card explore-detail-save">
+            <span class="eyebrow">SIMPAN KEGIATAN</span><h2>Koleksi kegiatan</h2>
+            {% if user.is_authenticated and user.profile.role == 'volunteer' %}
+            <p>Pilih koleksi untuk menyimpan kegiatan ini.</p>
+            {% for koleksi in koleksi_list %}
+                <form method="post" action="{% url 'eksplorasi:koleksi_toggle' koleksi.pk kegiatan.pk %}" class="explore-detail-collection-form">
+                {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <span>{{ koleksi.nama }}</span>
+                <button class="btn btn-save" type="submit">{% if koleksi.ada %}Hapus{% else %}Simpan{% endif %}</button>
+                </form>
+            {% empty %}<p class="explore-save-hint">Belum ada koleksi yang dibuat.</p>{% endfor %}
+            <a class="collection-manage-link" href="{% url 'eksplorasi:koleksi_buat' %}">Buat koleksi baru</a>
+            {% elif user.is_authenticated %}<p class="explore-save-hint">Penyimpanan koleksi tersedia untuk akun relawan.</p>
+            {% else %}<p class="explore-save-hint"><a href="{% url 'main:login' %}?role=volunteer">Masuk sebagai relawan</a> untuk menyimpan kegiatan ke koleksi.</p>{% endif %}
+        </aside>
+        </div>
+    </main>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        const el = document.getElementById('detail-map');
+        if (el && window.L) {
+        const lat = Number(el.dataset.lat), lng = Number(el.dataset.lng);
+        const map = L.map(el).setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+        const popup = document.createElement('span'); popup.textContent = el.dataset.title;
+        L.marker([lat,lng]).addTo(map).bindPopup(popup).openPopup();
+        }
+    </script>
+</body>
+</html>
