@@ -3,16 +3,24 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Create a default superuser if none exists."
+    help = "Create or reset a default superuser."
 
     def handle(self, *args, **options):
         User = get_user_model()
         username = "admin"
         password = "admin12345"
 
-        if User.objects.filter(is_superuser=True).exists():
-            self.stdout.write(self.style.WARNING("Superuser already exists — skipping."))
-            return
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={"email": "admin@volugreen.local"}
+        )
+        user.set_password(password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_active = True
+        user.save()
 
-        User.objects.create_superuser(username=username, email="", password=password)
-        self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' created successfully."))
+        if created:
+            self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' created successfully."))
+        else:
+            self.stdout.write(self.style.SUCCESS(f"Superuser '{username}' updated with valid credentials."))
