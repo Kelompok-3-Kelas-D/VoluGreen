@@ -1,7 +1,4 @@
 {% load static %}
-<!-- ===================================================================== -->
-<!-- === START BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ====== -->
-<!-- ===================================================================== -->
 <!doctype html>
 <html lang="id">
 <head>
@@ -25,7 +22,7 @@
       <span class="chip sm role-chip">Relawan</span>
       <nav class="app-nav" aria-label="Navigasi aplikasi">
         <a href="{% url 'eksplorasi:index' %}" aria-current="page">Cari kegiatan</a>
-        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>
+        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>
         <a href="{% url 'main:profile_settings' %}">Profil</a>
       </nav>
       <div class="app-tools">
@@ -34,7 +31,7 @@
       </div>
       <div class="mobile-drawer" id="volunteer-mobile-menu" hidden>
         <a href="{% url 'eksplorasi:index' %}" aria-current="page">Cari kegiatan</a>
-        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>
+        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>
         <a href="{% url 'main:profile_settings' %}">Profil</a>
       </div>
     </div>
@@ -46,7 +43,7 @@
       <div class="card" style="padding:28px 32px 32px">
         <div class="edit-head">
           <div>
-            <span class="eyebrow"><span data-i="sprout"></span>Alur Relawan · Pendaftaran Kegiatan</span>
+            <span class="eyebrow"><span data-i="sprout"></span>PENDAFTARAN KEGIATAN</span>
             <h1>Daftar sebagai <span class="hl">Relawan</span></h1>
           </div>
           <a class="btn btn-ghost btn-sm" href="{% url 'volunteer:halaman_dashboard_relawan' %}">
@@ -266,7 +263,4 @@
   <script src="{% static 'volunteer/js/volunteer.js' %}"></script>
 </body>
 </html>
-<!-- ===================================================================== -->
-<!-- === END BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ======== -->
-<!-- ===================================================================== -->
 

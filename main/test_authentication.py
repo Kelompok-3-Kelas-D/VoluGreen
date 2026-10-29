@@ -56,8 +56,32 @@ class AuthenticationFlowTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'id="f-quick"')
+        self.assertNotContains(response, 'id="home-login-form"')
+        self.assertNotContains(response, 'id="f-login"')
         self.assertContains(response, f'href="{reverse("main:login")}"')
         self.assertContains(response, f'href="{reverse("main:register")}"')
+        self.assertContains(response, f'href="{reverse("eksplorasi:index")}"')
+
+    def test_registration_login_link_preserves_selected_role(self):
+        response = self.client.get(reverse("main:register"), {"role": "organizer"})
+        self.assertContains(
+            response,
+            f'id="register-login-link" href="{reverse("main:login")}?role=organizer"',
+        )
+
+    def test_volunteer_home_links_to_own_dashboard_without_organizer_signup(self):
+        self.client.post(reverse("main:register"), self.volunteer_payload())
+        self.client.force_login(User.objects.get(username="budi@example.com"))
+        response = self.client.get(reverse("main:home"))
+        self.assertContains(response, f'href="{reverse("volunteer:halaman_dashboard_relawan")}"')
+        self.assertNotContains(response, "Jadi penyelenggara")
+
+    def test_staff_home_does_not_offer_profile_without_profile_record(self):
+        staff = User.objects.create_user("admin@example.com", password=self.password, is_staff=True)
+        self.client.force_login(staff)
+        response = self.client.get(reverse("main:home"))
+        self.assertContains(response, f'href="{reverse("admin_panel:dashboard")}"')
+        self.assertNotContains(response, f'href="{reverse("main:profile_settings")}"')
 
     def test_login_page_does_not_offer_admin_role(self):
         response = self.client.get(reverse("main:login"))
@@ -73,7 +97,7 @@ class AuthenticationFlowTests(TestCase):
             self.volunteer_payload(),
         )
 
-        self.assertRedirects(response, reverse("main:login"))
+        self.assertRedirects(response, f'{reverse("main:login")}?role=volunteer')
         user = User.objects.get(username="budi@example.com")
         self.assertEqual(user.email, "budi@example.com")
         self.assertEqual(user.first_name, "Budi Hijau")
@@ -96,7 +120,7 @@ class AuthenticationFlowTests(TestCase):
 
         response = self.client.post(reverse("main:register"), payload)
 
-        self.assertRedirects(response, reverse("main:login"))
+        self.assertRedirects(response, f'{reverse("main:login")}?role=organizer')
         profile = User.objects.get(username="halo@hijau.id").profile
         self.assertEqual(profile.role, Profile.Role.ORGANIZER)
         self.assertEqual(profile.organization_name, "Bank Sampah Hijau")

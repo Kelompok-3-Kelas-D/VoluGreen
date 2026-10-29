@@ -10,57 +10,13 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from urllib.parse import urlencode
 
 from .forms import LoginForm, ProfileSettingsForm, RegistrationForm
-from organizer.models import Kegiatan
 
 from .models import OrganizationSubmission, Profile
 
 
 def home(request):
-    now = timezone.now()
-    activities = list(
-        Kegiatan.objects.filter(
-            status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
-            tanggal_mulai__gte=now,
-        ).select_related("kategori", "organizer", "organizer__profile")[:6]
-    )
-    for activity in activities:
-        profile = getattr(activity.organizer, "profile", None)
-        activity.organizer_name = (
-            profile.organization_name
-            if profile and profile.organization_name
-            else activity.organizer.get_username()
-        )
-
-    profile_data = None
-    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
-    if profile:
-        submission = OrganizationSubmission.objects.filter(
-            contact_email__iexact=request.user.email
-        ).first() if profile.role == Profile.Role.ORGANIZER else None
-        profile_data = {
-            "role": profile.role,
-            "name": profile.organization_name if profile.role == Profile.Role.ORGANIZER else (request.user.first_name or request.user.get_username()),
-            "email": request.user.email,
-            "phone": profile.phone_number,
-            "city": profile.city,
-            "joined": timezone.localtime(request.user.date_joined).strftime("%d %b %Y"),
-            "organization_type": profile.get_organization_type_display(),
-            "organization_city": profile.city,
-            "organization_description": submission.description if submission else "",
-            "organization_status": submission.status if submission else "not_submitted",
-        }
-
-    requested_role = request.GET.get("role", Profile.Role.VOLUNTEER)
-    if requested_role not in Profile.Role.values:
-        requested_role = Profile.Role.VOLUNTEER
     return render(request, "index.html", {
         "volunteer_count": Profile.objects.filter(role=Profile.Role.VOLUNTEER).count(),
-        "verified_organization_count": OrganizationSubmission.objects.filter(
-            status=OrganizationSubmission.Status.VERIFIED
-        ).count(),
-        "public_activities": activities,
-        "profile_data": profile_data,
-        "requested_role": requested_role,
     })
 
 

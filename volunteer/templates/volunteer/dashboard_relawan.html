@@ -1,7 +1,4 @@
 {% load static %}
-<!-- ===================================================================== -->
-<!-- === START BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ====== -->
-<!-- ===================================================================== -->
 <!doctype html>
 <html lang="id">
 <head>
@@ -34,7 +31,7 @@
       <span class="chip sm role-chip">Relawan</span>
       <nav class="app-nav" aria-label="Navigasi aplikasi">
         <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
-        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">List kegiatan</a>
+        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">Pendaftaran saya</a>
         <a href="{% url 'main:profile_settings' %}">Profil</a>
       </nav>
       <div class="app-tools">
@@ -46,7 +43,7 @@
       </div>
       <div class="mobile-drawer" id="volunteer-mobile-menu" hidden>
         <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
-        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">List kegiatan</a>
+        <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">Pendaftaran saya</a>
         <a href="{% url 'main:profile_settings' %}">Profil</a>
       </div>
     </div>
@@ -59,7 +56,7 @@
       <div class="who">
         <div class="avatar"><div>{{ inisial_relawan }}</div></div>
         <div style="min-width:0">
-          <span class="chip yellow sm">Modul 3 · Alur Relawan</span>
+          <span class="chip yellow sm">DASHBOARD RELAWAN</span>
           <h1>Halo, {{ nama_relawan }}!</h1>
           <div class="meta">
             <span><span data-i="mail"></span><span>{{ email_relawan }}</span></span>
@@ -111,7 +108,7 @@
           <span class="eyebrow"><span data-i="leaf"></span>Aktivitas Relawan</span>
           <h1 id="judul-tab-aktif" style="font-size:26px">Status Pendaftaran Kegiatan</h1>
         </div>
-        <div class="seg" role="tablist" aria-label="Navigasi Alur Relawan" id="tab-relawan">
+        <div class="seg" role="tablist" aria-label="Navigasi pendaftaran relawan" id="tab-relawan">
           <button type="button" role="tab" aria-selected="true" data-tab="status" id="btn-tab-status">
             <span data-i="cal"></span>Status Pendaftaran
           </button>
@@ -376,7 +373,4 @@
   <script src="{% static 'volunteer/js/volunteer.js' %}"></script>
 </body>
 </html>
-<!-- ===================================================================== -->
-<!-- === END BAGIAN MICGUEL (MODUL 3: ALUR RELAWAN / PENDAFTARAN) ======== -->
-<!-- ===================================================================== -->
 

@@ -2,344 +2,116 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>VoluGreen</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="{% static 'css/style.css' %}?v=13">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Temukan kegiatan lingkungan dan bergabung sebagai relawan bersama VoluGreen.">
+  <title>VoluGreen · Aksi kecil untuk bumi lebih hijau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=14">
 </head>
 <body>
-<!-- ================= 2a · Beranda / Masuk dengan hero ================= -->
-<section class="screen" id="s-beranda" data-route="beranda" hidden>
-  <div class="bg"><img class="photo" data-photo alt=""></div>
-  <header class="top-shell">
-    <div class="top wrap">
-    <a class="logo on-dark" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
-    <nav aria-label="Navigasi utama">
-      <a href="#beranda">Beranda</a>
-      <a href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan</a>
-      {% if user.is_authenticated and user.profile.role == 'organizer' %}
-        <a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>
-      {% else %}
-        <a href="{% url 'main:register' %}?role=organizer">Mau jadi penyelenggara?</a>
-      {% endif %}
-      <a href="#tentang">Tentang kami</a>
-
-      {% if user.is_authenticated %}
-        <details class="account-menu">
-          <summary aria-label="Buka menu profil">
-            <span class="account-avatar">{{ user.first_name|default:user.username|first|upper }}</span>
-            <svg class="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
-          </summary>
-          <div class="account-menu-panel">
-            <strong>{{ user.first_name|default:user.username }}</strong>
-            <small>{{ user.profile.get_role_display }}</small>
-            <a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>
-            {% if user.profile.role == 'volunteer' %}<a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>{% elif user.profile.role == 'organizer' %}<a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>{% endif %}
-            <a href="{% url 'main:logout' %}">Keluar</a>
-          </div>
-        </details>
-      {% else %}
-        <a class="nav-login" href="{% url 'main:login' %}">
-          Masuk
-        </a>
-        <a
-          class="nav-register"
-          href="{% url 'main:register' %}"
-        >
-          Daftar
-        </a>
-      {% endif %}
-    </nav>
-    <button class="menu-btn" type="button" aria-label="Buka menu" data-drawer="d-beranda"><span data-i="menu"></span></button>
-    <div class="mobile-drawer" id="d-beranda" hidden>
-      <a href="#beranda">Beranda</a>
-      <a href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan</a>
-      {% if user.is_authenticated and user.profile.role == 'organizer' %}
-        <a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>
-      {% else %}
-        <a href="{% url 'main:register' %}?role=organizer">Mau jadi penyelenggara?</a>
-      {% endif %}
-
-      {% if user.is_authenticated %}
-        <a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>
-        {% if user.profile.role == 'volunteer' %}<a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>{% elif user.profile.role == 'organizer' %}<a href="{% url 'organizer:dashboard' %}">Dashboard</a>{% endif %}
-        <a href="{% url 'main:logout' %}">Keluar</a>
-      {% else %}
-        <a href="{% url 'main:login' %}">Masuk</a>
-        <a href="{% url 'main:register' %}">Daftar</a>
-      {% endif %}
-      <a href="#tentang">Tentang kami</a>
-
-    </div>
-    </div>
-  </header>
-  <div class="hero hero-intro wrap">
-    <div>
-      <span class="pill-dark"><span data-i="sprout"></span>Ayo jaga lingkungan</span>
-      <h1>Aksi kecil hari ini, <em>bumi lebih hijau</em> esok.</h1>
-      <p class="lede">Temukan aksi bersih lingkungan, urban farming, dan penanaman pohon dari komunitas terverifikasi di kotamu.</p>
-      <div class="crowd"><div><strong>{{ volunteer_count }}</strong><small>akun relawan terdaftar</small></div></div>
-      <div class="landing-actions">
-        {% if user.is_authenticated %}
-          {% if user.profile.role == 'volunteer' %}
-            <a class="cta inline" href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya <span class="arrow" aria-hidden="true">↗</span></a>
-            <a class="btn btn-outline-light" href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
-          {% else %}
-            <a class="cta inline" href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara <span class="arrow" aria-hidden="true">↗</span></a>
+  <section class="screen" id="beranda">
+    <div class="bg"><img class="photo" src="{% static 'assets/photo.jpg' %}" alt=""></div>
+    <header class="top-shell">
+      <div class="top wrap">
+        <a class="logo on-dark" href="#beranda" aria-label="VoluGreen, beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
+        <nav aria-label="Navigasi utama">
+          <a href="#beranda" aria-current="page">Beranda</a>
+          <a href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan</a>
+          <a href="#tentang">Tentang kami</a>
+          {% if user.is_staff %}
+            <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
+          {% elif user.is_authenticated and user.profile.role == 'organizer' %}
+            <a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>
+          {% elif not user.is_authenticated %}
+            <a href="{% url 'main:register' %}?role=organizer">Jadi penyelenggara</a>
           {% endif %}
-        {% else %}
-          <div class="signup-options" aria-label="Pilih jenis akun untuk mendaftar">
-            <a class="signup-option" href="{% url 'main:register' %}?role=volunteer"><span>Daftar sebagai relawan</span><span class="signup-arrow" aria-hidden="true">↗</span></a>
-            <a class="signup-option" href="{% url 'main:register' %}?role=organizer"><span>Daftar sebagai penyelenggara</span><span class="signup-arrow" aria-hidden="true">↗</span></a>
-          </div>
-          <a class="landing-login" href="{% url 'main:login' %}">Sudah punya akun? Masuk</a>
-        {% endif %}
-      </div>
-    </div>
-    <form class="card-login" id="home-login-form" method="post" action="{% url 'main:login' %}">
-      {% csrf_token %}
-      <input type="hidden" name="role" value="">
-      <div><h2>Masuk ke akunmu</h2></div>
-      <div class="field"><label for="home-login-email">Email</label><div class="control"><span data-i="mail"></span><input id="home-login-email" name="username" type="email" autocomplete="username" placeholder="nama@email.com" required></div></div>
-      <div class="field"><label for="home-login-password">Kata sandi</label><div class="control"><span data-i="lock"></span><input id="home-login-password" name="password" type="password" autocomplete="current-password" placeholder="Kata sandi akunmu" required><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="home-login-password"><span data-i="eye"></span></button></div></div>
-      <button class="cta block" type="submit"><span>Masuk</span><span class="arrow" data-i="arrow"></span></button>
-      <p class="foot-note">Belum punya akun? <a href="{% url 'main:register' %}">Daftar sekarang</a></p>
-    </form>
-  </div>
-  <p class="legal wrap">© 2026 VoluGreen · Kelompok 3 Kelas D</p>
-</section>
-
-<section class="screen about-screen" id="s-tentang" data-route="tentang" hidden>
-  <header class="plain-top wrap">
-    <a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
-    <a class="btn btn-ghost" href="#beranda">Kembali ke beranda</a>
-  </header>
-  <main class="about-content wrap">
-    <div>
-      <span class="eyebrow">TENTANG VOLUGREEN</span>
-      <h1>Aksi lingkungan tumbuh saat orang mudah terhubung.</h1>
-      <p>VoluGreen mempertemukan relawan dengan komunitas dan penyelenggara kegiatan lingkungan. Penyelenggara mengajukan kegiatan, admin meninjaunya, lalu relawan dapat menemukan kegiatan yang sudah diterbitkan dan mendaftar.</p>
-      <a class="btn btn-ghost" href="{% url 'eksplorasi:index' %}">Lihat kegiatan terbit <span aria-hidden="true">↗</span></a>
-    </div>
-    <ol class="about-steps">
-      <li><span>01</span><div><strong>Penyelenggara mengajukan</strong><p>Kegiatan disimpan untuk ditinjau admin.</p></div></li>
-      <li><span>02</span><div><strong>Admin meninjau</strong><p>Kegiatan yang disetujui tampil di direktori publik.</p></div></li>
-      <li><span>03</span><div><strong>Relawan ikut serta</strong><p>Relawan menemukan kegiatan dan memantau pendaftarannya.</p></div></li>
-    </ol>
-  </main>
-</section>
-
-<!-- Direktori hanya menampilkan kegiatan yang benar-benar diterbitkan. -->
-<section class="screen app" id="s-kegiatan" data-route="kegiatan" hidden>
-  <header class="app-top" data-shell="relawan" data-active="kegiatan"></header>
-  <main class="app-main wrap">
-    <section class="banner activity-directory-banner"><div class="who"><div><span class="chip yellow sm">DIREKTORI KEGIATAN</span><h1>Kegiatan lingkungan</h1><p>Kegiatan terbit yang dikelola organisasi di VoluGreen.</p></div></div></section>
-    <section class="activity-directory" aria-label="Daftar kegiatan terbit">
-      {% for activity in public_activities %}
-        <article class="card public-activity">
-          <div class="public-activity-top"><span class="chip sm">{{ activity.kategori.name }}</span><time datetime="{{ activity.tanggal_mulai|date:'c' }}">{{ activity.tanggal_mulai|date:"d M Y, H:i" }}</time></div>
-          <h2>{{ activity.nama }}</h2><p>{{ activity.deskripsi }}</p>
-          <dl><div><dt>Penyelenggara</dt><dd>{{ activity.organizer_name }}</dd></div><div><dt>Lokasi</dt><dd>{{ activity.nama_lokasi }}{% if activity.kota %}, {{ activity.kota }}{% endif %}</dd></div><div><dt>Kuota kegiatan</dt><dd>{{ activity.kuota }} relawan</dd></div></dl>
-        </article>
-      {% empty %}
-        <div class="card directory-empty"><h2>Belum ada kegiatan terbit</h2><p>Kegiatan akan muncul setelah organisasi terverifikasi dan admin menerbitkannya.</p></div>
-      {% endfor %}
-    </section>
-  </main>
-</section>
-
-<!-- ================= 2b · Masuk dengan pilihan peran ================= -->
-<section class="screen" id="s-masuk" data-route="masuk" hidden>
-  <div class="auth-col">
-    <a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
-    <form class="inner" id="f-login" method="post" action="{% url 'main:login' %}" novalidate>
-      {% csrf_token %}
-      <input id="spa-login-role" type="hidden" name="role" value="volunteer">
-      <span class="eyebrow"><span data-i="sprout"></span>Selamat datang kembali</span>
-      <h1>Masuk dan lanjutkan <span class="hl">aksimu</span></h1>
-      <div class="field"><span class="label" id="lbl-role">Masuk sebagai</span>
-        <div class="seg" role="tablist" aria-labelledby="lbl-role" id="login-role">
-          <button type="button" role="tab" aria-selected="true" data-role="relawan"><span data-i="heart"></span>Relawan</button>
-          <button type="button" role="tab" aria-selected="false" data-role="penyelenggara"><span data-i="building"></span>Penyelenggara</button>
-        </div></div>
-      <div class="field"><label for="l-email">Email</label>
-        <div class="control"><span data-i="mail"></span><input id="l-email" name="username" type="email" autocomplete="email" placeholder="Masukkan email"></div>
-        <span class="err" data-err="l-email"></span></div>
-      <div class="field"><label for="l-pass">Kata sandi</label>
-        <div class="control"><span data-i="lock"></span><input id="l-pass" name="password" type="password" autocomplete="current-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="l-pass"><span data-i="eye"></span></button></div>
-        <span class="err" data-err="l-pass"></span></div>
-      <button class="cta block" type="submit"><span id="login-cta">Masuk sebagai Relawan</span><span class="arrow" data-i="arrow"></span></button>
-      <p style="font-size:14.5px;color:var(--muted)">Belum punya akun? <a class="link-strong" href="{% url 'main:register' %}" style="text-decoration:underline">Daftar sekarang</a></p>
-    </form>
-  </div>
-  <div class="panel" aria-hidden="true">
-    <div class="dots" style="--dot:rgba(255,255,255,.25);left:32px;bottom:32px;width:150px;height:150px"></div>
-    <div class="p1"><img class="photo" data-photo alt=""></div>
-    <div class="p2"><div><img class="photo" data-photo alt=""></div></div>
-    <div class="badge-float badge-yellow b1"><big>{{ verified_organization_count }}</big><span>organisasi<br>terverifikasi</span></div>
-    <div class="badge-float badge-dark b2"><span class="round" data-i="building"></span>Kelola kegiatan<br>lingkungan</div>
-  </div>
-</section>
-
-<!-- ================= 2c · Daftar ================= -->
-<section class="screen" id="s-daftar" data-route="daftar" hidden>
-  <header class="plain-top wrap">
-    <a class="logo" href="#beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
-    <div style="display:flex;align-items:center;gap:14px"><span class="muted" id="has-acc">Sudah punya akun?</span><a class="btn btn-ghost" href="{% url 'main:login' %}">Masuk</a></div>
-  </header>
-  <div class="reg wrap">
-    <div class="collage" aria-hidden="true">
-      <div class="dots" style="left:-6px;bottom:0;width:150px;height:150px"></div>
-      <div class="c1"><img class="photo" data-photo alt=""></div>
-      <div class="c2"><div><img class="photo" data-photo alt=""></div></div>
-      <div class="badge-float badge-yellow gratis"><big>Gratis</big><span id="gratis-sub">untuk semua relawan</span></div>
-      <div class="badge-float badge-dark verif"><span class="round" data-i="shield"></span>Profil organisasi<br>ditinjau admin</div>
-    </div>
-    <form class="reg-form" id="f-reg" method="post" action="{% url 'main:register' %}" novalidate>
-      {% csrf_token %}
-      <input id="spa-reg-role" type="hidden" name="role" value="{{ requested_role|default:'volunteer' }}">
-      <span class="eyebrow"><span data-i="sprout"></span>Bergabung dengan VoluGreen</span>
-      <h1>Buat akun dan mulai <span class="hl">beraksi</span></h1>
-      <div class="seg" role="tablist" aria-label="Jenis akun" id="reg-role">
-        <button type="button" role="tab" aria-selected="true" data-role="relawan"><span data-i="heart"></span>Saya relawan</button>
-        <button type="button" role="tab" aria-selected="false" data-role="penyelenggara"><span data-i="building"></span>Saya penyelenggara</button>
-      </div>
-      <ul class="ticks" id="reg-ticks"></ul>
-      <div class="grid2">
-        <div class="field"><label for="r-name" id="r-name-lbl">Nama lengkap</label>
-          <div class="control"><input id="r-name" name="name" autocomplete="name" placeholder="Nama sesuai KTM/KTP"></div><span class="err" data-err="r-name"></span></div>
-        <div class="field"><label for="r-email">Email</label>
-          <div class="control"><input id="r-email" name="username" type="email" autocomplete="email" placeholder="nama@email.com"></div><span class="err" data-err="r-email"></span></div>
-        <div class="field"><label for="r-phone">Nomor HP</label>
-          <div class="control"><input id="r-phone" name="phone_number" type="tel" autocomplete="tel" placeholder="+62 8xx xxxx xxxx"></div><span class="err" data-err="r-phone"></span></div>
-        <div class="field" data-only="relawan penyelenggara"><label id="r-city-lbl" for="r-city">Kota domisili</label>
-          <div class="control"><span data-i="pin"></span><input id="r-city" name="city" autocomplete="address-level2" placeholder="Contoh: Depok, Jawa Barat"></div><span class="err" data-err="r-city"></span></div>
-        <div class="field" data-only="penyelenggara" hidden><label for="r-type">Jenis organisasi</label>
-          <div class="control"><span data-i="building"></span><select id="r-type" name="organization_type"><option value="waste_bank">Bank sampah</option><option value="environmental_community">Komunitas lingkungan</option><option value="community_garden">Kebun komunitas</option><option value="social_organization">Organisasi sosial</option><option value="campus">Kampus</option></select><span data-i="chev" style="color:var(--muted)"></span></div></div>
-        <div class="field" data-only="penyelenggara" hidden><label for="r-org-description">Tentang organisasi (opsional)</label><div class="control"><textarea id="r-org-description" name="organization_description" rows="3" maxlength="2000" placeholder="Ceritakan kegiatan atau fokus organisasi secara singkat."></textarea></div></div>
-        <div class="field"><label for="r-pass">Kata sandi</label>
-          <div class="control"><input id="r-pass" name="password1" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter"><button class="eye" type="button" aria-label="Tampilkan kata sandi" data-eye="r-pass"><span data-i="eye"></span></button></div>
-          <div class="strength" id="r-strength" data-lv="0" aria-live="polite"><i></i><i></i><i></i><b></b></div><span class="err" data-err="r-pass"></span></div>
-        <div class="field"><label for="r-pass2">Konfirmasi kata sandi</label>
-          <div class="control"><input id="r-pass2" name="password2" type="password" autocomplete="new-password" placeholder="Ulangi kata sandi"><span id="r-match" data-i="check" style="color:var(--accent);font-size:18px" hidden></span></div><span class="err" data-err="r-pass2"></span></div>
-      </div>
-      {% if form.errors %}<div class="form-server-errors" role="alert">{{ form.non_field_errors }}{% for field in form %}{% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
-      <label class="check"><input id="r-terms" name="terms" type="checkbox"><span class="box" data-i="check"></span><span>Saya menyatakan data yang dikirim benar dan menyetujui penggunaannya untuk membuat akun VoluGreen.</span></label>
-      <span class="err" data-err="r-terms"></span>
-      <div><button class="cta inline" type="submit">Buat akun<span class="arrow" data-i="arrow"></span></button></div>
-    </form>
-  </div>
-</section>
-
-<!-- ================= 2d · Profil relawan ================= -->
-<section class="screen app" id="s-profil" data-route="profil" hidden>
-  <header class="app-top" data-shell="relawan" data-active="profil"></header>
-  <main class="app-main wrap">
-    <div class="banner">
-      <div class="cover"><img class="photo" data-photo alt=""></div>
-      <div class="who">
-        <div class="avatar"><div data-bind="avatar"></div></div>
-        <div style="min-width:0">
-          <span class="chip yellow sm">Relawan</span>
-          <h1 data-bind="name"></h1>
-          <div class="meta"><span><span data-i="pin"></span><span data-bind="city"></span></span><span><span data-i="cal"></span><span data-bind="joined"></span></span></div>
+          {% if user.is_authenticated %}
+            <details class="account-menu">
+              <summary aria-label="Buka menu akun">
+                <span class="account-avatar">{{ user.first_name|default:user.username|first|upper }}</span>
+                <svg class="account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+              </summary>
+              <div class="account-menu-panel">
+                <strong>{{ user.first_name|default:user.username }}</strong>
+                {% if user.is_staff %}<small>Administrator</small>{% else %}<small>{{ user.profile.get_role_display }}</small>{% endif %}
+                {% if user.is_staff %}<a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>{% else %}<a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>{% if user.profile.role == 'volunteer' %}<a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>{% else %}<a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>{% endif %}{% endif %}
+                <a href="{% url 'main:logout' %}">Keluar</a>
+              </div>
+            </details>
+          {% else %}
+            <a class="nav-login" href="{% url 'main:login' %}">Masuk</a>
+            <a class="nav-register" href="{% url 'main:register' %}">Daftar</a>
+          {% endif %}
+        </nav>
+        <button class="menu-btn" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="beranda-menu" data-drawer="beranda-menu"><span data-i="menu"></span></button>
+        <div class="mobile-drawer" id="beranda-menu" hidden>
+          <a href="#beranda" aria-current="page">Beranda</a>
+          <a href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan</a>
+          <a href="#tentang">Tentang kami</a>
+          {% if user.is_staff %}
+            <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
+          {% elif user.is_authenticated and user.profile.role == 'organizer' %}
+            <a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>
+          {% elif not user.is_authenticated %}
+            <a href="{% url 'main:register' %}?role=organizer">Jadi penyelenggara</a>
+          {% endif %}
+          {% if user.is_authenticated %}
+            {% if not user.is_staff %}<a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>{% if user.profile.role == 'volunteer' %}<a href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>{% endif %}{% endif %}
+            <a href="{% url 'main:logout' %}">Keluar</a>
+          {% else %}
+            <a href="{% url 'main:login' %}">Masuk</a>
+            <a href="{% url 'main:register' %}">Daftar</a>
+          {% endif %}
         </div>
       </div>
-      <a class="btn btn-ghost edit" href="{% url 'main:profile_settings' %}"><span data-i="pencil"></span>Edit profil</a>
-    </div>
-    <div class="card contribution-empty"><span class="ring" data-i="calcheck"></span><div><h2>Pendaftaran dan riwayat kegiatan</h2><p>Pantau pendaftaran, tanggapan penyelenggara, dan catatan kehadiran dari satu halaman.</p></div><a class="btn btn-ghost" href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya <span aria-hidden="true">↗</span></a></div>
-    <div class="two">
-      <div class="card" style="display:flex;flex-direction:column;gap:14px">
-        <h3>Profil relawan</h3>
-        <dl class="kv" style="margin:0"><div><dt>Kota domisili</dt><dd data-bind="city"></dd></div><div><dt>Tanggal bergabung</dt><dd data-bind="joined"></dd></div></dl>
-      </div>
-      <div class="card" style="display:flex;flex-direction:column;gap:16px">
-        <h3>Informasi akun</h3>
-        <dl class="kv" style="margin:0">
-          <div><dt>Email</dt><dd data-bind="email"></dd></div>
-          <div><dt>Nomor HP</dt><dd data-bind="phone"></dd></div>
-          <div><dt>Peran</dt><dd>Relawan</dd></div>
-        </dl>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-          <a class="btn btn-ghost" href="{% url 'main:profile_settings' %}"><span data-i="lock"></span>Pengaturan akun</a>
-          <a class="btn btn-text" href="{% url 'main:logout' %}">
-            <span data-i="logout"></span>Keluar
-          </a>
+    </header>
+    <main class="hero hero-intro wrap">
+      <div class="hero-content">
+        <span class="pill-dark"><span data-i="sprout"></span>Ayo jaga lingkungan</span>
+        <h1>Aksi kecil hari ini, <em>bumi lebih hijau</em> esok.</h1>
+        <p class="lede">Temukan aksi bersih lingkungan, urban farming, dan penanaman pohon dari komunitas di kotamu.</p>
+        <div class="landing-actions">
+          <a class="cta inline" href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan <span class="arrow" aria-hidden="true">↗</span></a>
+          {% if user.is_staff %}
+            <a class="btn btn-outline-light" href="{% url 'admin_panel:dashboard' %}">Buka panel admin</a>
+          {% elif user.is_authenticated and user.profile.role == 'volunteer' %}
+            <a class="btn btn-outline-light" href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>
+          {% elif user.is_authenticated and user.profile.role == 'organizer' %}
+            <a class="btn btn-outline-light" href="{% url 'organizer:dashboard' %}">Kelola kegiatan</a>
+          {% else %}
+            <a class="btn btn-outline-light" href="{% url 'main:register' %}?role=volunteer">Daftar sebagai relawan</a>
+          {% endif %}
         </div>
+        <div class="crowd"><div><strong>{{ volunteer_count }}</strong><small>akun relawan terdaftar</small></div></div>
       </div>
-    </div>
-  </main>
-</section>
+      <div class="hero-guide" aria-label="Langkah bergabung">
+        <span class="hero-guide-label">MULAI AKSIMU</span>
+        <strong>Temukan kegiatan yang cocok denganmu.</strong>
+        <p>Lihat waktu, lokasi, dan sisa kuota sebelum mendaftar.</p>
+        <a href="{% url 'eksplorasi:index' %}">Lihat semua kegiatan <span aria-hidden="true">↗</span></a>
+      </div>
+    </main>
+    <p class="legal wrap">© 2026 VoluGreen · Kelompok 3 Kelas D</p>
+  </section>
 
-<!-- ================= 2e · Profil penyelenggara ================= -->
-<section class="screen app" id="s-organisasi" data-route="organisasi" hidden>
-  <header class="app-top" data-shell="penyelenggara" data-active="organisasi"></header>
-  <main class="app-main wrap">
-    <div class="notice" role="status">
-      <span class="round" data-i="clock"></span>
-      <div class="txt"><b id="org-review-title">Profil organisasimu sedang ditinjau admin</b><span>Lowongan kegiatan bisa dipublikasikan setelah organisasi terverifikasi.</span></div>
-      <ol class="steps" aria-label="Status verifikasi profil organisasi">
-        <li data-org-step="created"><span class="dot"></span>Akun dibuat</li>
-        <li data-org-step="submitted"><span class="dot"></span>Profil organisasi dikirim</li>
-        <li data-org-step="review"><span class="dot"></span>Ditinjau admin</li>
-        <li data-org-step="verified"><span class="dot"></span>Terverifikasi</li>
+  <section class="about-screen" id="tentang" aria-labelledby="about-heading">
+    <div class="about-content wrap">
+      <div>
+        <span class="eyebrow">TENTANG VOLUGREEN</span>
+        <h2 id="about-heading">Aksi lingkungan tumbuh saat orang mudah terhubung.</h2>
+        <p>VoluGreen mempertemukan relawan dengan komunitas dan penyelenggara kegiatan lingkungan. Penyelenggara mengajukan kegiatan, admin meninjaunya, lalu relawan dapat menemukan kegiatan yang sudah diterbitkan dan mendaftar.</p>
+        <a class="btn btn-ghost" href="{% url 'eksplorasi:index' %}">Cari kegiatan terbit <span aria-hidden="true">↗</span></a>
+      </div>
+      <ol class="about-steps">
+        <li><span>01</span><div><strong>Penyelenggara mengajukan</strong><p>Kegiatan disimpan untuk ditinjau admin.</p></div></li>
+        <li><span>02</span><div><strong>Admin meninjau</strong><p>Kegiatan yang disetujui tampil di direktori publik.</p></div></li>
+        <li><span>03</span><div><strong>Relawan ikut serta</strong><p>Relawan menemukan kegiatan dan memantau pendaftarannya.</p></div></li>
       </ol>
     </div>
-    <div class="org">
-      <div class="dots" style="--dot:rgba(255,255,255,.2);right:28px;top:22px;width:130px;height:70px"></div>
-      <div class="org-head">
-        <div class="org-logo"><div data-i="recycle"></div></div>
-        <div class="t">
-          <h2 data-bind="org-name">Nama organisasi belum diisi</h2>
-          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13.5px">
-            <span class="chip dark" data-bind="org-type">Jenis organisasi belum diisi</span>
-            <span class="chip yellow" data-bind="org-status">Menunggu verifikasi</span>
-            <span style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.88)"><span data-i="pin"></span><span data-bind="org-city">Lokasi belum diisi</span></span>
-          </div>
-        </div>
-        <a class="cta inline" href="{% url 'main:profile_settings' %}">Edit profil<span class="arrow" data-i="arrow"></span></a>
-      </div>
-      <div class="three">
-        <div class="card">
-          <h3>Tentang organisasi</h3>
-          <p style="font-size:14.5px;color:var(--ink-2);line-height:1.6" data-bind="org-description">Belum ada deskripsi organisasi.</p>
-          <ul class="contact">
-            <li><span class="r" data-i="mail"></span><span data-bind="org-email"></span></li>
-            <li><span class="r" data-i="phone"></span><span data-bind="org-phone">Nomor belum diisi</span></li>
-          </ul>
-        </div>
-        <div class="card">
-          <div class="row-between"><h3>Lokasi</h3><span class="muted-sm">OpenStreetMap</span></div>
-          <div class="map" aria-label="Peta OpenStreetMap lokasi organisasi">
-            <iframe data-org-osm-frame title="Peta OpenStreetMap lokasi organisasi" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
-            <p data-org-osm-empty class="map-empty">Peta lokasi kota akan ditampilkan di sini.</p>
-          </div>
-          <p style="font-size:14.5px">Kota organisasi: <strong data-bind="org-city">Lokasi belum diisi</strong></p>
-          <div class="map-actions"><button class="btn btn-ghost" type="button" data-org-osm-load>Tampilkan peta</button><a class="map-link" data-org-osm-link href="https://www.openstreetmap.org/" target="_blank" rel="noopener" hidden>Buka OpenStreetMap ↗</a></div>
-          <p class="muted-sm" data-org-osm-status aria-live="polite">Peta dimuat dari OpenStreetMap saat ditampilkan.</p>
-        </div>
-        <div class="card">
-          <h3>Informasi verifikasi</h3>
-          <p class="verification-copy">Admin meninjau informasi profil organisasi yang dikirim saat pendaftaran. Saat ini sistem tidak meminta unggahan atau melakukan pemeriksaan dokumen.</p>
-          <span class="chip wait">Verifikasi melalui data profil</span>
-        </div>
-      </div>
-    </div>
-  </main>
-</section>
-
-<script>
-  window.VOLUGREEN_PHOTO_URL = "{% static 'assets/photo.jpg' %}";
-  window.VOLUGREEN_LOGOUT_URL = "{% url 'main:logout' %}";
-  window.VOLUGREEN_ORGANIZER_URL = "{% url 'organizer:dashboard' %}";
-  window.VOLUGREEN_PROFILE_SETTINGS_URL = "{% url 'main:profile_settings' %}";
-  window.VOLUGREEN_LOGIN_URL = "{% url 'main:login' %}";
-</script>
-{{ profile_data|json_script:"volugreen-profile-data" }}
-<script src="{% static 'js/script.js' %}?v=4"></script>
-<script src="{% static 'js/osm.js' %}?v=3"></script>
+  </section>
+  <script src="{% static 'js/script.js' %}?v=5" defer></script>
 </body>
 </html>

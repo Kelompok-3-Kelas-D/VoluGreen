@@ -310,7 +310,7 @@ def lihat_daftar_status_ajax(request):
         qs = qs.filter(status=status_filter)
 
     if kata_kunci:
-        q_filter = Q(kegiatan__kategori__nama__icontains=kata_kunci)
+        q_filter = Q(kegiatan__kategori__name__icontains=kata_kunci)
         for nama_field in utils.FIELD_PENCARIAN_KEGIATAN:
             q_filter |= Q(**{f"kegiatan__{nama_field}__icontains": kata_kunci})
         qs = qs.filter(q_filter)

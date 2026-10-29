@@ -60,6 +60,12 @@
   function paintRegister(role) {
     if (!registerRole || !registerTabs) return;
     registerRole.value = role;
+    const loginLink = document.getElementById("register-login-link");
+    if (loginLink) {
+      const url = new URL(loginLink.href);
+      url.searchParams.set("role", role);
+      loginLink.href = url.toString();
+    }
     registerTabs.querySelectorAll("[data-role]").forEach((button) => {
       button.setAttribute("aria-selected", String(button.dataset.role === role));
     });
@@ -125,6 +131,12 @@
   function paintLogin(role) {
     if (!loginRole || !loginTabs) return;
     loginRole.value = role;
+    const registerLink = document.getElementById("login-register-link");
+    if (registerLink) {
+      const url = new URL(registerLink.href);
+      url.searchParams.set("role", role);
+      registerLink.href = url.toString();
+    }
     loginTabs.querySelectorAll("[data-role]").forEach((button) => {
       button.setAttribute("aria-selected", String(button.dataset.role === role));
     });

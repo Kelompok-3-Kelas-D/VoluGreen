@@ -87,7 +87,7 @@ Panel admin kustom dipisahkan sebagai Django app `admin_panel`, dengan URL, view
 - Pendaftaran penyelenggara otomatis membuat pengajuan berstatus menunggu di panel admin.
 - Dashboard `/organizer/` memakai kategori admin yang sama untuk membuat, mengubah, menghapus draft, dan mencatat dampak kegiatan.
 - Admin memverifikasi organisasi dan meninjau draft sebelum kegiatan diterbitkan. Kegiatan organizer yang telah terbit muncul di antrean kegiatan admin.
-- Modul eksplorasi `/eksplorasi/` mencari kegiatan terbit mendatang berdasarkan kata kunci, kota, dan kategori, membuka lokasi nyata di OpenStreetMap, serta menyimpan kegiatan ke koleksi pribadi pengguna.
+- Modul eksplorasi `/eksplorasi/` mencari kegiatan terbit berdasarkan kata kunci, kota, dan kategori. Kegiatan dengan waktu mulai yang sudah lewat tetap tampil di bagian Kegiatan sebelumnya tanpa tombol pendaftaran. Lokasi kegiatan dapat dibuka di OpenStreetMap.
 - App `volunteer` menangani form pendaftaran, status, pembatalan, dan riwayat. `/volunteer/` menampilkan dashboard relawan; halaman dari Cari kegiatan memeriksa kuota dan mengirim pendaftaran ke database yang sama dengan organizer. Endpoint JSON berada di `/volunteer/api/` dan hanya dapat diakses oleh akun relawan yang sudah login.
 - Organizer menerima/menolak pendaftar dari dashboard `/organizer/`, lalu menandai kehadiran setelah acara. Hasilnya langsung tercermin di status, kuota, dan riwayat relawan.
 - Migrasi `volunteer.0002_import_legacy_registrations` menyalin pendaftaran lama beserta statusnya ke model baru. URL `/relawan/` tetap menjadi alias kompatibilitas ke app `volunteer`; model lama tidak dipakai lagi oleh alur aktif.

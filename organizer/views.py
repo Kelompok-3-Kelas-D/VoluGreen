@@ -51,7 +51,7 @@ def _dashboard_context(request, profile, form=None):
                 else activity.get_status_publikasi_display()
             ),
             "can_report_impact": can_report_impact,
-            "impact_form": DampakForm(instance=impact) if can_report_impact else None,
+            "impact_form": DampakForm(instance=impact, auto_id=f"id_%s_{activity.pk}") if can_report_impact else None,
         })
     return {
         "profile": profile,
@@ -66,7 +66,6 @@ def _dashboard_context(request, profile, form=None):
             for a in activities
         ),
         "form": form or KegiatanForm(),
-        "submission_complete": False,
     }
 
 
@@ -74,7 +73,6 @@ def _dashboard_context(request, profile, form=None):
 def dashboard(request, page="overview"):
     profile = _require_organizer(request)
     dashboard_url = reverse("organizer:activities")
-    overview_url = reverse("organizer:dashboard")
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -92,7 +90,8 @@ def dashboard(request, page="overview"):
                     activity.organizer = request.user
                     activity.status_publikasi = Kegiatan.StatusPublikasi.DRAFT
                     activity.save()
-                return redirect(f"{overview_url}?submitted=1")
+                messages.success(request, "Kegiatan terkirim untuk ditinjau admin.")
+                return redirect(f"{dashboard_url}#lowongan")
             context = _dashboard_context(request, profile, form)
             context["page"] = page
             return render(request, "organizer/dashboard.html", context)
@@ -112,7 +111,7 @@ def dashboard(request, page="overview"):
                 messages.error(request, "Dampak dapat dicatat setelah kegiatan terbit dan waktu kegiatannya terlewati.")
                 return redirect(f"{dashboard_url}#dampak")
             impact = DampakKegiatan.objects.filter(kegiatan=activity).first()
-            form = DampakForm(request.POST, instance=impact)
+            form = DampakForm(request.POST, instance=impact, auto_id=f"id_%s_{activity.pk}")
             if form.is_valid():
                 impact = form.save(commit=False)
                 impact.kegiatan = activity
@@ -126,6 +125,7 @@ def dashboard(request, page="overview"):
                     if item["pk"] == activity.pk:
                         item["impact_form"] = form
                         break
+                context["page"] = "activities"
                 return render(request, "organizer/dashboard.html", context)
 
         if action == "update_application":
@@ -164,9 +164,9 @@ def dashboard(request, page="overview"):
                     application.status = target_status
                 if target_status in {PendaftaranRelawan.Status.ACCEPTED, PendaftaranRelawan.Status.REJECTED}:
                     application.pesan = review_note
-                    application.save(update_fields=["status", "pesan", "diperbarui_pada"])
+                    application.save(update_fields=["status", "pesan", "waktu_diperbarui"])
                 elif target_status == PendaftaranRelawan.Status.ABSENT:
-                    application.save(update_fields=["status", "diperbarui_pada"])
+                    application.save(update_fields=["status", "waktu_diperbarui"])
                 messages.success(request, f"Status relawan {application.relawan.get_full_name() or application.relawan.get_username()} diperbarui menjadi {application.get_status_display()}.")
             return redirect(f"{dashboard_url}#lowongan")
 
@@ -182,6 +182,5 @@ def dashboard(request, page="overview"):
             return redirect(f"{dashboard_url}#lowongan")
         form = KegiatanForm(instance=activity)
     context = _dashboard_context(request, profile, form)
-    context["submission_complete"] = request.GET.get("submitted") == "1"
     context["page"] = page
     return render(request, "organizer/dashboard.html", context)

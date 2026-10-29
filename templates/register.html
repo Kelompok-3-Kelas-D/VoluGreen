@@ -11,7 +11,7 @@
     </a>
     <div style="display:flex;align-items:center;gap:14px">
       <span class="muted" id="has-acc">Sudah punya akun?</span>
-      <a class="btn btn-ghost" href="{% url 'main:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Masuk</a>
+      <a class="btn btn-ghost" id="register-login-link" href="{% url 'main:login' %}?role={{ requested_role|urlencode }}{% if next %}&amp;next={{ next|urlencode }}{% endif %}">Masuk</a>
     </div>
   </header>
 
@@ -149,5 +149,5 @@
 {% endblock content %}
 
 {% block scripts %}
-<script src="{% static 'js/auth.js' %}?v=3"></script>
+<script src="{% static 'js/auth.js' %}?v=4"></script>
 {% endblock scripts %}

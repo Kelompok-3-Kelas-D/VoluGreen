@@ -44,7 +44,7 @@
     }
     if (searchStatus) {
       searchStatus.textContent = query
-        ? `${activityResponse.meta.total} kegiatan cocok dengan pencarianmu.`
+        ? `${activityResponse.meta.total} kegiatan mendatang cocok. Tekan Cari untuk melihat hasil termasuk kegiatan selesai.`
         : "";
     }
   }
