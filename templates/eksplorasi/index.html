@@ -19,18 +19,16 @@
       <a class="logo" href="{% url 'main:home' %}"><span class="logo-mark" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>VoluGreen</a>
       <nav class="{% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}app-nav{% endif %}" aria-label="Navigasi utama">
         {% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}
-          <a href="#kegiatan" aria-current="page">Cari kegiatan</a>
+          <a href="{% url 'eksplorasi:index' %}" aria-current="page">Cari kegiatan</a>
           <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>
           <a href="{% url 'eksplorasi:koleksi_daftar' %}">Koleksi</a>
           <a href="{% url 'main:profile_settings' %}">Profil</a>
         {% elif request.user.is_authenticated %}
-          <a href="#kegiatan" aria-current="page">Cari kegiatan</a>
-          <a href="#cara-kerja">Cara kerja</a>
+          <a href="{% url 'eksplorasi:index' %}" aria-current="page">Cari kegiatan</a>
           <a href="{% url 'organizer:dashboard' %}">Dashboard</a>
           <a href="{% url 'main:logout' %}">Keluar</a>
         {% else %}
-          <a href="#kegiatan" aria-current="page">Cari kegiatan</a>
-          <a href="#cara-kerja">Cara kerja</a>
+          <a href="{% url 'eksplorasi:index' %}" aria-current="page">Cari kegiatan</a>
           <a href="{% url 'main:login' %}">Masuk</a>
           <button class="btn btn-ghost explore-register" type="button" data-open-signup>Daftar</button>
         {% endif %}
@@ -71,16 +69,6 @@
       <div class="explore-heading"><div><span class="eyebrow">PETA KEGIATAN</span><h2 id="explore-map-title">Lokasi aksi lingkungan</h2></div><span class="explore-count">{{ markers|length }} titik</span></div>
       <div id="activity-map" role="region" aria-label="Peta lokasi kegiatan mendatang"></div>
       {% if tanpa_koordinat %}<p class="explore-map-note">{{ tanpa_koordinat }} kegiatan belum memiliki koordinat dan belum bisa ditampilkan pada peta.</p>{% endif %}
-    </section>
-
-    <section class="explore-how" id="cara-kerja" aria-labelledby="explore-how-title">
-      <span class="eyebrow">MULAI BERKONTRIBUSI</span>
-      <h2 id="explore-how-title">Cara ikut kegiatan</h2>
-      <ol>
-        <li><span>01</span><div><strong>Temukan aksi yang cocok</strong><p>Gunakan pencarian dan filter untuk melihat kegiatan mendatang di kotamu.</p></div></li>
-        <li><span>02</span><div><strong>Baca detail dan lokasinya</strong><p>Periksa informasi kegiatan dan buka peta untuk mengetahui titik lokasinya.</p></div></li>
-        <li><span>03</span><div><strong>Daftar sebagai relawan</strong><p>Masuk atau buat akun relawan, lalu kirim pendaftaran ke penyelenggara.</p></div></li>
-      </ol>
     </section>
 
     <div class="explore-layout">

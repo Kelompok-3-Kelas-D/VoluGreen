@@ -20,6 +20,7 @@ from .models import KoleksiKegiatan
 PUBLISHED = Kegiatan.StatusPublikasi.PUBLISHED
 
 
+@login_required(login_url="/login/")
 def index(request):
     qs, nilai = filter(request.GET)
     qs = qs.select_related("kategori", "organizer", "organizer__profile")

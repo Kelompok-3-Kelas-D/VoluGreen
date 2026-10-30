@@ -197,10 +197,11 @@ svg.ic{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-
 .app-top .wrap{display:flex;align-items:center;gap:16px;min-height:82px}
 .app-top .role-chip{margin-left:6px}
 .app-nav{margin-left:auto;display:flex;align-items:center;gap:30px}
-.app-nav a{position:relative;text-decoration:none;color:var(--muted);font-weight:700;font-size:15.5px;padding-block:8px;white-space:nowrap}
+.app-nav a{position:relative;text-decoration:none;color:var(--muted);font-weight:700;font-size:15.5px;padding-block:8px;white-space:nowrap;transition:color .18s ease}
 .app-nav a:hover{color:var(--green)}
 .app-nav a[aria-current="page"]{color:var(--green)}
-.app-nav a[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:3px;border-radius:3px;background:var(--yellow)}
+.app-nav a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:3px;border-radius:3px;background:var(--yellow);transform:scaleX(0);transform-origin:left;transition:transform .18s ease}
+.app-nav a:hover::after,.app-nav a[aria-current="page"]::after{transform:scaleX(1)}
 .app-tools{display:flex;align-items:center;gap:12px;margin-left:30px}
 .bell{position:relative;width:42px;height:42px;border-radius:50%;border:0;background:var(--mint);color:var(--green);display:grid;place-items:center;cursor:pointer;font-size:18px}
 .bell::after{content:"";position:absolute;top:9px;right:10px;width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 2px var(--mint)}

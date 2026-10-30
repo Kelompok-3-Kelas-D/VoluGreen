@@ -19,7 +19,7 @@
         <a class="logo on-dark" href="#beranda" aria-label="VoluGreen, beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
         <nav aria-label="Navigasi utama">
           <a href="#beranda" aria-current="page">Beranda</a>
-          <a href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan</a>
+          <a href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan</a>
           <a href="#tentang">Tentang kami</a>
           {% if user.is_staff %}
             <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
@@ -49,7 +49,7 @@
         <button class="menu-btn" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="beranda-menu" data-drawer="beranda-menu"><span data-i="menu"></span></button>
         <div class="mobile-drawer" id="beranda-menu" hidden>
           <a href="#beranda" aria-current="page">Beranda</a>
-          <a href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan</a>
+          <a href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan</a>
           <a href="#tentang">Tentang kami</a>
           {% if user.is_staff %}
             <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
@@ -74,7 +74,7 @@
         <h1>Aksi kecil hari ini, <em>bumi lebih hijau</em> esok.</h1>
         <p class="lede">Temukan aksi bersih lingkungan, urban farming, dan penanaman pohon dari komunitas di kotamu.</p>
         <div class="landing-actions">
-          <a class="cta inline" href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan <span class="arrow" aria-hidden="true">↗</span></a>
+          <a class="cta inline" href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan <span class="arrow" aria-hidden="true">↗</span></a>
           {% if user.is_staff %}
             <a class="btn btn-outline-light" href="{% url 'admin_panel:dashboard' %}">Buka panel admin</a>
           {% elif user.is_authenticated and user.profile.role == 'volunteer' %}
