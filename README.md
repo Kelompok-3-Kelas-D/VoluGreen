@@ -38,13 +38,13 @@ Melalui VoluGreen:
 
 ---
 
-## 🔗 Repositori Git
+## 🔗 Tautan Proyek
 
 **Link repositori:** [github.com/Kelompok-3-Kelas-D/VoluGreen](https://github.com/Kelompok-3-Kelas-D/VoluGreen)
 
 **Situs deployment PWS:** [rayhan-fairuz51-volugreen.pws.cs.ui.ac.id](https://rayhan-fairuz51-volugreen.pws.cs.ui.ac.id/)
 
-**Link desain Figma:** [VoluGreen UI/UX Design](https://www.figma.com/design/ffTeu2AFsZg3GF3bK5UDJX/VoluGreen---UI-UX-Design?node-id=0-1&t=Jga5XjoTVnDYRJxK-1)
+**Desain UI/UX Figma:** [VoluGreen — UI/UX Design](https://www.figma.com/design/ffTeu2AFsZg3GF3bK5UDJX/VoluGreen---UI-UX-Design?node-id=0-1&t=Jga5XjoTVnDYRJxK-1)
 
 ---
 
@@ -75,11 +75,11 @@ Melalui VoluGreen:
 ### Menjalankan panel admin lokal
 
 1. Pasang dependensi Django dengan `python -m pip install -r requirements.txt`.
-2. Siapkan database dan akun admin: `python manage.py migrate`, lalu `python manage.py createsuperuser`.
+2. Siapkan database dan akun admin: `python manage.py migrate`, `python manage.py seed_initial_activities`, lalu `python manage.py createsuperuser`.
 3. Jalankan situs dengan `python manage.py runserver`.
 4. Buka `http://localhost:8000/` untuk situs, `/eksplorasi/` untuk mencari kegiatan, `/volunteer/` untuk dashboard relawan, `/organizer/` untuk dashboard penyelenggara, atau `/admin-panel/` untuk panel admin. Masuk memakai akun yang sesuai perannya.
 
-Panel membaca data Django. Tidak ada perintah seed contoh yang dijalankan otomatis; data tampil setelah organisasi, kegiatan, kategori, atau laporan benar-benar dibuat.
+Panel membaca data Django. Perintah `seed_initial_activities` memuat 60 kegiatan simulasi terbit dari [`organizer/fixtures/initial_activities.json`](organizer/fixtures/initial_activities.json), beserta enam penyelenggara demo. Judul kegiatan tampil tanpa kode demo; deskripsinya menjelaskan bahwa kegiatan bersifat simulasi. Tanggal dihitung dari hari pertama seed, dan akun demo tidak memiliki kata sandi yang bisa dipakai login. Perintah aman dijalankan ulang: kegiatan yang sudah ada tidak diduplikasi atau ditimpa, dan judul lama berawalan `[Demo 0XX]` diperbarui. Untuk mengisi database lokal secara manual, jalankan `python manage.py seed_initial_activities` setelah migrasi.
 
 Panel admin kustom dipisahkan sebagai Django app `admin_panel`, dengan URL, view, template, aset, tes, serta model moderasi dan laporan miliknya sendiri. Model `ActivityModeration` dan `UserReport` tetap memakai tabel database yang sama saat dipindahkan, sehingga data lama tidak perlu dibuat ulang. Panel memakai kategori dan pengajuan organisasi bersama dari `main`, serta kegiatan dari `organizer`; akses tetap khusus akun staff.
 
@@ -98,7 +98,7 @@ Panel admin kustom dipisahkan sebagai Django app `admin_panel`, dengan URL, view
 
 1. Salin `.env.example` ke `.env` untuk konfigurasi lokal. Jangan commit `.env` atau secret.
 2. Di server, atur `PRODUCTION=True`, `DEBUG=False`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, serta kredensial PostgreSQL `DB_*` dan `SCHEMA`.
-3. Pasang dependensi, jalankan `python manage.py migrate`, lalu `python manage.py collectstatic --noinput`. Buat akun admin lewat `python manage.py createsuperuser`; akun dengan kata sandi bawaan lama akan dinonaktifkan saat migrasi.
+3. Pasang dependensi, jalankan `python manage.py migrate`, `python manage.py seed_initial_activities`, lalu `python manage.py collectstatic --noinput`. `Procfile` juga menjalankan seed otomatis setelah migrasi saat deployment. Buat akun admin lewat `python manage.py createsuperuser`; akun dengan kata sandi bawaan lama akan dinonaktifkan saat migrasi.
 4. Jalankan `gunicorn volugreen.wsgi:application --bind 0.0.0.0:$PORT` (perintah juga tersedia di `Procfile`). Pastikan platform memberi HTTPS dan variabel lingkungan tadi.
 
 Interface menjaga navigasi konsisten, memberi umpan balik pada tindakan dan kesalahan, mempertahankan filter, mencegah pendaftaran ganda/kuota berlebih, serta membatasi perubahan status berdasarkan peran dan waktu kegiatan. Pembatalan relawan wajib menyertakan alasan; organizer mengelola keputusan dan kehadiran.
@@ -135,4 +135,4 @@ Made with love by Kelompok 3 - Kelas D
 - Eksplorasi menggunakan kegiatan dan lokasi dari database. Relawan dapat mengarsipkan kegiatan dengan tombol ikon dan melihatnya lewat menu akun → Arsip kegiatan. Kegiatan yang dulu tersimpan dalam koleksi dipindahkan ke arsip lewat migrasi.
 - Dashboard organizer menyimpan draft dan catatan dampak ke database.
 - Alur pendaftaran, pembatalan, status, dan pencatatan kehadiran relawan tersimpan di database. Pemeriksaan dokumen organisasi belum tersedia dan tidak ditampilkan sebagai fitur.
-- Database lokal bersih dari rekaman seed demo. Kategori konfigurasi tetap tersimpan.
+- Database baru mendapat 60 kegiatan terbit dan enam penyelenggara demo setelah `seed_initial_activities` dijalankan. Kategori konfigurasi tetap tersimpan.

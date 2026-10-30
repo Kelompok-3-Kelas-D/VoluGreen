@@ -1,8 +1,10 @@
 from datetime import timedelta
 from decimal import Decimal
+from io import StringIO
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.core.exceptions import ValidationError
 from django.template.context import Context
 from django.test import TestCase
@@ -267,3 +269,36 @@ class OrganizerDashboardIntegrationTest(TestCase):
         self.assertRedirects(response, f"{url}#kegiatan-{event.pk}", fetch_redirect_response=False)
         application.refresh_from_db()
         self.assertEqual(application.status, PendaftaranRelawan.Status.ABSENT)
+
+
+class InitialActivitiesSeedTests(TestCase):
+    def test_seed_creates_visible_activities_and_is_safe_to_repeat(self):
+        output = StringIO()
+        call_command("seed_initial_activities", stdout=output)
+        seeded = Kegiatan.objects.filter(organizer__username__startswith="demo_")
+        self.assertEqual(seeded.count(), 60)
+        self.assertFalse(seeded.filter(nama__startswith="[Demo ").exists())
+        self.assertEqual(seeded.filter(status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED).count(), 60)
+        self.assertEqual(seeded.filter(tanggal_mulai__gt=timezone.now()).count(), 60)
+        self.assertEqual(seeded.exclude(latitude__isnull=True).exclude(longitude__isnull=True).count(), 60)
+        for activity in seeded:
+            activity.full_clean()
+        organizer = get_user_model().objects.get(username="demo_rimbun")
+        self.assertFalse(organizer.has_usable_password())
+
+        volunteer = get_user_model().objects.create_user("seed-viewer", password="safe-password")
+        Profile.objects.create(user=volunteer, role=Profile.Role.VOLUNTEER, phone_number="081234567890")
+        self.client.force_login(volunteer)
+        response = self.client.get(reverse("eksplorasi:index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["activities"]), 60)
+
+        original = Kegiatan.objects.get(nama="Bersih Bantaran Ciliwung Jakarta")
+        original_pk = original.pk
+        original.nama = f"[Demo 001] {original.nama}"
+        original.save(update_fields=["nama"])
+        call_command("seed_initial_activities", stdout=output)
+        self.assertEqual(seeded.count(), 60)
+        original.refresh_from_db()
+        self.assertEqual(original.pk, original_pk)
+        self.assertEqual(original.nama, "Bersih Bantaran Ciliwung Jakarta")
