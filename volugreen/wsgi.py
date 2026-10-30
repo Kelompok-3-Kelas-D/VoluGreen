@@ -23,5 +23,18 @@ def _ensure_initial_data():
     except Exception as exc:
         print(f"[WSGI BOOT] Seed failed: {exc}")
 
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        admin_user, _ = User.objects.get_or_create(
+            username="admin", defaults={"email": "admin@volugreen.local"}
+        )
+        admin_user.set_password("admin12345")
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+    except Exception as exc:
+        print(f"[WSGI BOOT] Admin creation failed: {exc}")
+
 
 _ensure_initial_data()
