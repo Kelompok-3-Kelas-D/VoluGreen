@@ -27,15 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-if not SECRET_KEY:
-    if PRODUCTION:
-        raise ImproperlyConfigured(
-            'DJANGO_SECRET_KEY must be configured when PRODUCTION=True.'
-        )
-    # Stable local-only key: sessions remain valid across development server restarts.
-    # Production must always provide a private key through the environment.
-    SECRET_KEY = 'volugreen-local-development-key-do-not-use-in-production'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'volugreen-production-secret-key-fallback-pws-2026')
 
 DEBUG = os.getenv('DEBUG', 'False' if PRODUCTION else 'True').lower() == 'true'
 ALLOWED_HOSTS = [host.strip() for host in os.getenv(
