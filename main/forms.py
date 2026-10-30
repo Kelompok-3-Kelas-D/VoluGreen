@@ -237,6 +237,8 @@ class LoginForm(AuthenticationForm):
 
     def confirm_login_allowed(self, user):
         super().confirm_login_allowed(user)
+        if user.is_staff or user.is_superuser:
+            return
         selected_role = self.cleaned_data.get("role")
 
         # Form login cepat di beranda tidak meminta pengguna memilih peran.

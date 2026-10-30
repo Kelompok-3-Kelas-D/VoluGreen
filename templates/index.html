@@ -19,11 +19,7 @@
         <a class="logo on-dark" href="#beranda" aria-label="VoluGreen, beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
         <nav aria-label="Navigasi utama">
           <a href="#beranda" aria-current="page">Beranda</a>
-          {% if user.is_authenticated and user.profile.role == 'volunteer' %}
-            <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
-          {% elif not user.is_authenticated %}
-            <a href="{% url 'main:register' %}?role=organizer">Jadi penyelenggara</a>
-          {% endif %}
+          <a href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan</a>
           <a href="#tentang">Tentang kami</a>
           {% if user.is_staff %}
             <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
@@ -53,11 +49,7 @@
         <button class="menu-btn" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="beranda-menu" data-drawer="beranda-menu"><span data-i="menu"></span></button>
         <div class="mobile-drawer" id="beranda-menu" hidden>
           <a href="#beranda" aria-current="page">Beranda</a>
-          {% if user.is_authenticated and user.profile.role == 'volunteer' %}
-            <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
-          {% elif not user.is_authenticated %}
-            <a href="{% url 'main:register' %}?role=organizer">Jadi penyelenggara</a>
-          {% endif %}
+          <a href="{% url 'eksplorasi:index' %}">Jelajahi kegiatan</a>
           <a href="#tentang">Tentang kami</a>
           {% if user.is_staff %}
             <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
