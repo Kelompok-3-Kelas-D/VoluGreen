@@ -14,26 +14,63 @@ from organizer.models import Kegiatan
 
 from django.contrib.auth import get_user_model, login as auth_login
 from django.http import HttpResponse
+from django.conf import settings
 
 def setup_admin(request):
-    """Endpoint untuk memastikan superuser tersedia dan bisa langsung login."""
+    """Debug endpoint: create/reset superuser, show DB info, auto-login."""
+    import traceback
     User = get_user_model()
-    username = request.GET.get("u", "admin").strip()
-    password = request.GET.get("p", "admin12345").strip()
+    logs = []
 
-    user, created = User.objects.get_or_create(
-        username=username,
-        defaults={"email": f"{username}@volugreen.local"}
-    )
-    user.set_password(password)
-    user.is_staff = True
-    user.is_superuser = True
-    user.is_active = True
-    user.save()
+    # Show database engine
+    db_engine = settings.DATABASES.get("default", {}).get("ENGINE", "unknown")
+    db_name = settings.DATABASES.get("default", {}).get("NAME", "unknown")
+    logs.append(f"DB Engine: {db_engine}")
+    logs.append(f"DB Name: {db_name}")
 
-    # Langsung login ke session saat ini
-    auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-    return redirect("admin_panel:dashboard")
+    # Create / reset superuser
+    username = "admin"
+    password = "admin12345"
+    try:
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={"email": "admin@volugreen.local"},
+        )
+        user.set_password(password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_active = True
+        user.save()
+        logs.append(f"User '{username}' {'CREATED' if created else 'UPDATED'} — is_staff={user.is_staff}, is_superuser={user.is_superuser}, is_active={user.is_active}")
+
+        # Auto-login
+        auth_login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        logs.append(f"Auto-login: OK (session user = {request.user})")
+    except Exception:
+        logs.append(f"ERROR creating user: {traceback.format_exc()}")
+
+    # List all users
+    try:
+        all_users = User.objects.all()
+        logs.append(f"Total users in DB: {all_users.count()}")
+        for u in all_users:
+            logs.append(f"  - {u.username} | staff={u.is_staff} | super={u.is_superuser} | active={u.is_active}")
+    except Exception:
+        logs.append(f"ERROR listing users: {traceback.format_exc()}")
+
+    html_lines = "".join(f"<li>{line}</li>" for line in logs)
+    html = f"""<!DOCTYPE html>
+<html><head><title>VoluGreen Admin Setup</title></head>
+<body style="font-family:monospace; padding:2em;">
+<h1>Admin Setup Result</h1>
+<ul>{html_lines}</ul>
+<hr>
+<p><strong>Username:</strong> {username} &nbsp; <strong>Password:</strong> {password}</p>
+<p><a href="/admin-panel/">&#x2192; Go to Admin Panel Dashboard</a></p>
+<p><a href="/admin/">&#x2192; Go to Django Admin</a></p>
+</body></html>"""
+    return HttpResponse(html)
+
 
 
 @staff_member_required(login_url="/admin/login/")
