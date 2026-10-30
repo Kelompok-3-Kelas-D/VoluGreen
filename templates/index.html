@@ -45,7 +45,7 @@
               <div class="account-menu-panel">
                 <strong>{{ user.first_name|default:user.username }}</strong>
                 {% if user.is_staff %}<small>Administrator</small>{% else %}<small>{{ user.profile.get_role_display }}</small>{% endif %}
-                {% if user.is_staff %}<a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>{% else %}<a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>{% if user.profile.role == 'volunteer' %}<a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>{% else %}<a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>{% endif %}{% endif %}
+                {% if user.is_staff %}<a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>{% else %}<a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>{% if user.profile.role == 'volunteer' %}<a href="{% url 'eksplorasi:arsip_daftar' %}">Arsip kegiatan</a><a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>{% else %}<a href="{% url 'organizer:dashboard' %}">Dashboard penyelenggara</a>{% endif %}{% endif %}
                 <a href="{% url 'main:logout' %}">Keluar</a>
               </div>
             </details>
@@ -75,7 +75,7 @@
             <a href="{% url 'main:register' %}?role=organizer">Jadi penyelenggara</a>
           {% endif %}
           {% if user.is_authenticated %}
-            {% if not user.is_staff %}<a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>{% if user.profile.role == 'volunteer' %}<a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>{% endif %}{% endif %}
+            {% if not user.is_staff %}<a href="{% url 'main:profile_settings' %}">Profil dan pengaturan</a>{% if user.profile.role == 'volunteer' %}<a href="{% url 'eksplorasi:arsip_daftar' %}">Arsip kegiatan</a><a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>{% endif %}{% endif %}
             <a href="{% url 'main:logout' %}">Keluar</a>
           {% else %}
             <a href="{% url 'main:login' %}">Masuk</a>

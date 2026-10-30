@@ -18,7 +18,8 @@
       <span class="eyebrow">
         <span data-i="sprout"></span>Selamat datang kembali
       </span>
-      <h1>Masuk dan lanjutkan <span class="hl">aksimu</span></h1>
+      <h1>{% if admin_login %}Masuk ke <span class="hl">panel admin</span>{% else %}Masuk dan lanjutkan <span class="hl">aksimu</span>{% endif %}</h1>
+      {% if next %}<p class="auth-next-hint">Setelah masuk, kamu akan melanjutkan ke halaman yang tadi dipilih jika sesuai dengan peran akunmu.</p>{% endif %}
 
       {% if messages %}
         {% for message in messages %}
@@ -32,7 +33,7 @@
         <p class="err">{{ error }}</p>
       {% endfor %}
 
-      <div class="field">
+      {% if not admin_login %}<div class="field">
         <span class="label" id="lbl-role">Masuk sebagai</span>
         <div class="seg" role="tablist" aria-labelledby="lbl-role" id="login-role">
           <button type="button" role="tab" aria-selected="{% if requested_role == 'volunteer' %}true{% else %}false{% endif %}" data-role="volunteer">
@@ -42,10 +43,10 @@
             <span data-i="building"></span>Penyelenggara
           </button>
         </div>
-      </div>
+      </div>{% else %}<p class="auth-next-hint">Gunakan akun staf untuk membuka panel admin.</p>{% endif %}
 
       <div class="field">
-        <label for="{{ form.username.id_for_label }}">Email</label>
+        <label for="{{ form.username.id_for_label }}">Email atau username</label>
         <div class="control">
           <span data-i="mail"></span>{{ form.username }}
         </div>
@@ -67,14 +68,14 @@
       </div>
 
       <button class="cta block" type="submit">
-        <span id="login-cta">Masuk sebagai {% if requested_role == 'organizer' %}Penyelenggara{% else %}Relawan{% endif %}</span>
+        <span id="login-cta">{% if admin_login %}Masuk ke panel admin{% else %}Masuk sebagai {% if requested_role == 'organizer' %}Penyelenggara{% else %}Relawan{% endif %}{% endif %}</span>
         <span class="arrow" data-i="arrow"></span>
       </button>
 
-      <p style="font-size:14.5px;color:var(--muted)">
+      {% if not admin_login %}<p style="font-size:14.5px;color:var(--muted)">
         Belum punya akun?
         <a class="link-strong" id="login-register-link" href="{% url 'main:register' %}?role={{ requested_role|urlencode }}{% if next %}&amp;next={{ next|urlencode }}{% endif %}" style="text-decoration:underline">Daftar sekarang</a>
-      </p>
+      </p>{% endif %}
     </form>
   </div>
 

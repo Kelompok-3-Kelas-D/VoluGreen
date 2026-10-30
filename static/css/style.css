@@ -389,3 +389,5 @@ svg.ic{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-
   .steps li{font-size:11px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* Context for sign-in and registration links coming from a specific activity. */
+.auth-next-hint{margin:4px 0 18px;color:var(--muted);font-size:13px;line-height:1.6}

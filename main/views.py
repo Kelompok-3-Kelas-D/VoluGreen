@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.urls import Resolver404, resolve, reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 from .forms import LoginForm, ProfileSettingsForm, RegistrationForm
 
@@ -101,6 +101,29 @@ def _role_home_url(user):
     return reverse("volunteer:halaman_dashboard_relawan")
 
 
+def _destination_after_auth(request, user, next_url):
+    """Honor a safe destination only when the account can open that area."""
+    if not next_url:
+        return _role_home_url(user)
+    try:
+        match = resolve(urlsplit(next_url).path)
+    except (Resolver404, ValueError):
+        return _role_home_url(user)
+    profile = getattr(user, "profile", None)
+    role = profile.role if profile else None
+    area = match.namespaces[0] if match.namespaces else ""
+    allowed = (
+        (area not in {"volunteer", "relawan"} or role == Profile.Role.VOLUNTEER)
+        and (area != "organizer" or role == Profile.Role.ORGANIZER)
+        and (area not in {"admin_panel", "admin"} or user.is_staff)
+        and match.view_name not in {"main:login", "main:register", "main:logout"}
+    )
+    if allowed:
+        return next_url
+    messages.info(request, "Halaman tujuan tidak tersedia untuk peran akun ini. Kamu diarahkan ke dashboard akunmu.")
+    return _role_home_url(user)
+
+
 def register(request):
     requested_role = request.GET.get("role")
     if requested_role not in Profile.Role.values:
@@ -109,7 +132,7 @@ def register(request):
     if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         next_url = ""
     if request.user.is_authenticated:
-        return redirect(next_url or _role_home_url(request.user))
+        return redirect(_destination_after_auth(request, request.user, next_url))
     form = RegistrationForm(request.POST or None, initial={"role": requested_role})
     if request.method == "POST" and form.is_valid():
         try:
@@ -144,21 +167,19 @@ def login_user(request):
     if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         next_url = ""
     if request.user.is_authenticated:
-        return redirect(next_url or _role_home_url(request.user))
+        return redirect(_destination_after_auth(request, request.user, next_url))
     form = LoginForm(request, data=request.POST or None, initial={"role": requested_role})
     if request.method == "POST" and form.is_valid():
         user = form.get_user()
         login(request, user)
-        if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
-            destination = next_url
-        else:
-            destination = _role_home_url(user)
+        destination = _destination_after_auth(request, user, next_url)
         response = redirect(destination)
         response.set_cookie("last_login", timezone.localtime().strftime("%Y-%m-%d %H:%M:%S"), samesite="Lax")
         return response
     return render(request, "login.html", {
         "form": form,
         "next": next_url,
+        "admin_login": urlsplit(next_url).path == reverse("admin_panel:dashboard"),
         "requested_role": form.data.get("role", requested_role),
         "verified_organization_count": OrganizationSubmission.objects.filter(
             status=OrganizationSubmission.Status.VERIFIED

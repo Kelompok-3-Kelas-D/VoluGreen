@@ -6,5 +6,4 @@ app_name = "admin_panel"
 
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
-    path("setup/", views.setup_admin, name="setup_admin"),
 ]

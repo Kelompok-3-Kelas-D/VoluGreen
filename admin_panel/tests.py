@@ -17,7 +17,15 @@ class AdminPanelTests(TestCase):
     def test_panel_requires_staff_login(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/admin/login/", response["Location"])
+        self.assertIn("/login/", response["Location"])
+        login_page = self.client.get(response["Location"])
+        self.assertContains(login_page, "Masuk ke panel admin")
+
+    def test_public_admin_setup_endpoint_is_gone(self):
+        setup_url = "/admin-panel/setup/"
+        self.assertEqual(self.client.get(setup_url).status_code, 404)
+        self.assertEqual(self.client.post(setup_url, {"username": "intruder", "password": "secret"}).status_code, 404)
+        self.assertFalse(get_user_model().objects.filter(username="intruder").exists())
 
     def test_staff_can_create_update_and_delete_category(self):
         self.client.force_login(self.staff)
@@ -40,6 +48,22 @@ class AdminPanelTests(TestCase):
         organization.refresh_from_db()
         self.assertEqual(organization.status, OrganizationSubmission.Status.VERIFIED)
         self.assertEqual(organization.verified_by, self.staff.username)
+
+    def test_used_category_cannot_be_deleted_and_shows_clear_message(self):
+        self.client.force_login(self.staff)
+        organizer = get_user_model().objects.create_user(username="category-organizer")
+        category = Category.objects.create(name="Kategori dipakai")
+        Kegiatan.objects.create(
+            organizer=organizer, nama="Kegiatan kategori", deskripsi="Aksi warga",
+            kategori=category, tanggal_mulai=timezone.now(), nama_lokasi="Depok", kuota=10,
+        )
+        response = self.client.post(self.url, {
+            "action": "delete_category", "category_id": category.pk,
+            "return_page": "categories",
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Category.objects.filter(pk=category.pk).exists())
+        self.assertContains(response, "Kategori sudah dipakai kegiatan")
 
     def test_staff_can_publish_organizer_draft_from_panel(self):
         self.client.force_login(self.staff)

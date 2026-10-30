@@ -1,15 +1,10 @@
 from django.contrib import admin
 
-from .models import KoleksiKegiatan
+from .models import ArsipKegiatan
 
 
-@admin.register(KoleksiKegiatan)
-class KoleksiKegiatanAdmin(admin.ModelAdmin):
-    list_display = ("nama", "pengguna", "jumlah_kegiatan", "diperbarui_pada")
-    list_filter = ("diperbarui_pada",)
-    search_fields = ("nama", "pengguna__username", "pengguna__email")
-    filter_horizontal = ("kegiatan",)
-
-    @admin.display(description="Jumlah kegiatan")
-    def jumlah_kegiatan(self, obj):
-        return obj.kegiatan.count()
+@admin.register(ArsipKegiatan)
+class ArsipKegiatanAdmin(admin.ModelAdmin):
+    list_display = ("pengguna", "kegiatan", "disimpan_pada")
+    list_filter = ("disimpan_pada",)
+    search_fields = ("pengguna__username", "pengguna__email", "kegiatan__nama")

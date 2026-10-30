@@ -1,0 +1,13 @@
+<form method="post" class="archive-form" action="{% url 'eksplorasi:arsip_toggle' archive_activity.pk %}">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}{% if return_anchor %}#{{ return_anchor }}{% endif %}">
+  <button class="archive-button{% if archived %} is-archived{% endif %}" type="submit"
+          aria-pressed="{% if archived %}true{% else %}false{% endif %}"
+          aria-label="{% if archived %}Hapus {{ archive_activity.nama }} dari arsip{% else %}Arsipkan {{ archive_activity.nama }}{% endif %}"
+          title="{% if archived %}Hapus dari arsip{% else %}Arsipkan kegiatan{% endif %}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="4" rx="1"></rect>
+      <path d="M5 8v12h14V8M10 12h4"></path>
+    </svg>
+  </button>
+</form>

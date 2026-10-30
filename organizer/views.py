@@ -34,7 +34,6 @@ def _dashboard_context(request, profile, form=None):
             activity.status_publikasi == Kegiatan.StatusPublikasi.PUBLISHED
             and activity.tanggal_mulai <= timezone.now()
         )
-        impact = getattr(activity, "dampak", None)
         activities.append({
             "pk": activity.pk, "nama": activity.nama, "deskripsi": activity.deskripsi,
             "kategori": activity.kategori, "tanggal_mulai": activity.tanggal_mulai,
@@ -51,18 +50,20 @@ def _dashboard_context(request, profile, form=None):
                 else activity.get_status_publikasi_display()
             ),
             "can_report_impact": can_report_impact,
-            "impact_form": DampakForm(instance=impact, auto_id=f"id_%s_{activity.pk}") if can_report_impact else None,
+            "has_impact": hasattr(activity, "dampak"),
         })
     return {
         "profile": profile,
         "organization_submission": submission,
         "activities": activities,
-        "impact_activities": [activity for activity in activities if activity["can_report_impact"]],
+        "pending_activities": [activity for activity in activities if activity["status_publikasi"] == Kegiatan.StatusPublikasi.DRAFT],
+        "published_activities": [activity for activity in activities if activity["status_publikasi"] == Kegiatan.StatusPublikasi.PUBLISHED],
+        "archived_activities": [activity for activity in activities if activity["status_publikasi"] == Kegiatan.StatusPublikasi.ARCHIVED],
         "activity_count": len(activities),
         "draft_count": sum(a["status_publikasi"] == Kegiatan.StatusPublikasi.DRAFT for a in activities),
         "published_count": sum(a["status_publikasi"] == Kegiatan.StatusPublikasi.PUBLISHED for a in activities),
         "needs_report_count": sum(
-            a["can_report_impact"] and a["impact_form"].instance.pk is None
+            a["can_report_impact"] and not a["has_impact"]
             for a in activities
         ),
         "form": form or KegiatanForm(),
@@ -72,7 +73,7 @@ def _dashboard_context(request, profile, form=None):
 @login_required(login_url="/login/")
 def dashboard(request, page="overview"):
     profile = _require_organizer(request)
-    dashboard_url = reverse("organizer:activities")
+    dashboard_url = reverse("organizer:dashboard")
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -82,7 +83,7 @@ def dashboard(request, page="overview"):
                         if activity_id else Kegiatan(organizer=request.user))
             if activity.pk and activity.status_publikasi != Kegiatan.StatusPublikasi.DRAFT:
                 messages.error(request, "Kegiatan yang sudah terbit atau diarsipkan tidak dapat diedit dari formulir draft.")
-                return redirect(f"{dashboard_url}#lowongan")
+                return redirect(f"{dashboard_url}#menunggu")
             form = KegiatanForm(request.POST, instance=activity)
             if form.is_valid():
                 with transaction.atomic():
@@ -91,42 +92,20 @@ def dashboard(request, page="overview"):
                     activity.status_publikasi = Kegiatan.StatusPublikasi.DRAFT
                     activity.save()
                 messages.success(request, "Kegiatan terkirim untuk ditinjau admin.")
-                return redirect(f"{dashboard_url}#lowongan")
+                return redirect(f"{dashboard_url}#menunggu")
             context = _dashboard_context(request, profile, form)
-            context["page"] = page
+            context["page"] = "activities"
+            context["editing_activity_id"] = activity.pk
             return render(request, "organizer/dashboard.html", context)
 
         if action == "delete_activity":
             activity = get_object_or_404(Kegiatan, pk=request.POST.get("activity_id"), organizer=request.user)
-            if activity.status_publikasi == Kegiatan.StatusPublikasi.PUBLISHED:
-                messages.error(request, "Kegiatan yang sudah terbit tidak dapat dihapus. Hubungi admin untuk mengarsipkannya.")
-            else:
+            if activity.status_publikasi == Kegiatan.StatusPublikasi.DRAFT:
                 activity.delete()
                 messages.success(request, "Draft kegiatan dihapus.")
-            return redirect(f"{dashboard_url}#lowongan")
-
-        if action == "save_impact":
-            activity = get_object_or_404(Kegiatan, pk=request.POST.get("activity_id"), organizer=request.user)
-            if activity.status_publikasi != Kegiatan.StatusPublikasi.PUBLISHED or activity.tanggal_mulai > timezone.now():
-                messages.error(request, "Dampak dapat dicatat setelah kegiatan terbit dan waktu kegiatannya terlewati.")
-                return redirect(f"{dashboard_url}#dampak")
-            impact = DampakKegiatan.objects.filter(kegiatan=activity).first()
-            form = DampakForm(request.POST, instance=impact, auto_id=f"id_%s_{activity.pk}")
-            if form.is_valid():
-                impact = form.save(commit=False)
-                impact.kegiatan = activity
-                impact.save()
-                messages.success(request, "Catatan dampak berhasil disimpan.")
-                return redirect(f"{dashboard_url}#dampak")
             else:
-                messages.error(request, "Periksa kembali isian dampak yang ditandai.")
-                context = _dashboard_context(request, profile)
-                for item in context["impact_activities"]:
-                    if item["pk"] == activity.pk:
-                        item["impact_form"] = form
-                        break
-                context["page"] = "activities"
-                return render(request, "organizer/dashboard.html", context)
+                messages.error(request, "Hanya kegiatan yang menunggu tinjauan yang dapat dihapus.")
+            return redirect(f"{dashboard_url}#menunggu")
 
         if action == "update_application":
             application = get_object_or_404(
@@ -138,7 +117,7 @@ def dashboard(request, page="overview"):
             review_note = request.POST.get("pesan", "").strip()
             if len(review_note) > 500:
                 messages.error(request, "Catatan penyelenggara maksimal 500 karakter.")
-                return redirect(f"{dashboard_url}#lowongan")
+                return redirect(f"{dashboard_url}#kegiatan-{application.kegiatan_id}")
             event_is_over = application.kegiatan.tanggal_mulai <= timezone.now()
             if target_status == PendaftaranRelawan.Status.ACCEPTED:
                 allowed = application.status == PendaftaranRelawan.Status.PENDING and not event_is_over
@@ -159,7 +138,7 @@ def dashboard(request, page="overview"):
                         )
                     except ValidationError as exc:
                         messages.error(request, "; ".join(exc.messages))
-                        return redirect(f"{dashboard_url}#lowongan")
+                        return redirect(f"{dashboard_url}#kegiatan-{application.kegiatan_id}")
                 else:
                     application.status = target_status
                 if target_status in {PendaftaranRelawan.Status.ACCEPTED, PendaftaranRelawan.Status.REJECTED}:
@@ -168,19 +147,43 @@ def dashboard(request, page="overview"):
                 elif target_status == PendaftaranRelawan.Status.ABSENT:
                     application.save(update_fields=["status", "waktu_diperbarui"])
                 messages.success(request, f"Status relawan {application.relawan.get_full_name() or application.relawan.get_username()} diperbarui menjadi {application.get_status_display()}.")
-            return redirect(f"{dashboard_url}#lowongan")
+            return redirect(f"{dashboard_url}#kegiatan-{application.kegiatan_id}")
 
         messages.error(request, "Aksi organizer tidak dikenali.")
         return redirect(dashboard_url)
 
     form = KegiatanForm()
-    edit_id = request.GET.get("edit")
+    edit_id = request.GET.get("edit") if page == "activities" else None
     if edit_id:
         activity = get_object_or_404(Kegiatan, pk=edit_id, organizer=request.user)
         if activity.status_publikasi != Kegiatan.StatusPublikasi.DRAFT:
             messages.error(request, "Kegiatan terbit/diarsipkan tidak bisa diedit sebagai draft.")
-            return redirect(f"{dashboard_url}#lowongan")
+            return redirect(f"{dashboard_url}#menunggu")
         form = KegiatanForm(instance=activity)
     context = _dashboard_context(request, profile, form)
     context["page"] = page
+    context["editing_activity_id"] = activity.pk if edit_id else None
     return render(request, "organizer/dashboard.html", context)
+
+
+@login_required(login_url="/login/")
+def impact_detail(request, pk):
+    profile = _require_organizer(request)
+    activity = get_object_or_404(Kegiatan.objects.select_related("kategori"), pk=pk, organizer=request.user)
+    can_report = activity.status_publikasi == Kegiatan.StatusPublikasi.PUBLISHED and activity.tanggal_mulai <= timezone.now()
+    impact = DampakKegiatan.objects.filter(kegiatan=activity).first()
+    form = DampakForm(request.POST or None, instance=impact, auto_id=f"id_%s_{activity.pk}")
+    if request.method == "POST":
+        if not can_report:
+            messages.error(request, "Dampak dapat dicatat setelah kegiatan terbit dan waktu kegiatannya terlewati.")
+            return redirect("organizer:impact_detail", pk=pk)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.kegiatan = activity
+            report.save()
+            messages.success(request, "Laporan dampak kegiatan berhasil disimpan.")
+            return redirect("organizer:impact_detail", pk=pk)
+    return render(request, "organizer/impact_detail.html", {
+        "profile": profile, "activity": activity, "form": form, "page": "impact",
+        "can_report": can_report, "impact": impact,
+    })

@@ -230,3 +230,28 @@ class AuthenticationFlowTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse("organizer:dashboard"))
+
+    def test_login_does_not_send_organizer_to_volunteer_page(self):
+        payload = self.volunteer_payload()
+        payload.update({
+            "role": Profile.Role.ORGANIZER,
+            "name": "Bank Sampah Hijau",
+            "username": "halo@hijau.id",
+            "organization_type": Profile.OrganizationType.WASTE_BANK,
+        })
+        self.client.post(reverse("main:register"), payload)
+        destination = reverse("volunteer:halaman_dashboard_relawan")
+        response = self.client.post(reverse("main:login"), {
+            "username": "halo@hijau.id", "password": self.password,
+            "role": Profile.Role.ORGANIZER, "next": destination,
+        })
+        self.assertRedirects(response, reverse("organizer:dashboard"))
+
+    def test_login_preserves_allowed_destination(self):
+        self.client.post(reverse("main:register"), self.volunteer_payload())
+        destination = reverse("volunteer:halaman_dashboard_relawan")
+        response = self.client.post(reverse("main:login"), {
+            "username": "budi@example.com", "password": self.password,
+            "role": Profile.Role.VOLUNTEER, "next": destination,
+        })
+        self.assertRedirects(response, destination)

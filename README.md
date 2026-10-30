@@ -96,7 +96,7 @@ Panel admin kustom dipisahkan sebagai Django app `admin_panel`, dengan URL, view
 
 1. Salin `.env.example` ke `.env` untuk konfigurasi lokal. Jangan commit `.env` atau secret.
 2. Di server, atur `PRODUCTION=True`, `DEBUG=False`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, serta kredensial PostgreSQL `DB_*` dan `SCHEMA`.
-3. Pasang dependensi, jalankan `python manage.py migrate`, lalu `python manage.py collectstatic --noinput`.
+3. Pasang dependensi, jalankan `python manage.py migrate`, lalu `python manage.py collectstatic --noinput`. Buat akun admin lewat `python manage.py createsuperuser`; akun dengan kata sandi bawaan lama akan dinonaktifkan saat migrasi.
 4. Jalankan `gunicorn volugreen.wsgi:application --bind 0.0.0.0:$PORT` (perintah juga tersedia di `Procfile`). Pastikan platform memberi HTTPS dan variabel lingkungan tadi.
 
 Interface menjaga navigasi konsisten, memberi umpan balik pada tindakan dan kesalahan, mempertahankan filter, mencegah pendaftaran ganda/kuota berlebih, serta membatasi perubahan status berdasarkan peran dan waktu kegiatan. Pembatalan relawan wajib menyertakan alasan; organizer mengelola keputusan dan kehadiran.
@@ -130,7 +130,7 @@ Made with love by Kelompok 3 - Kelas D
 ### Status integrasi saat ini
 
 - Direktori menampilkan kegiatan terbit dari database.
-- Eksplorasi menggunakan kegiatan dan lokasi dari database; koleksi kegiatan tersimpan per akun.
+- Eksplorasi menggunakan kegiatan dan lokasi dari database. Relawan dapat mengarsipkan kegiatan dengan tombol ikon dan melihatnya lewat menu akun → Arsip kegiatan. Kegiatan yang dulu tersimpan dalam koleksi dipindahkan ke arsip lewat migrasi.
 - Dashboard organizer menyimpan draft dan catatan dampak ke database.
 - Alur pendaftaran, pembatalan, status, dan pencatatan kehadiran relawan tersimpan di database. Pemeriksaan dokumen organisasi belum tersedia dan tidak ditampilkan sebagai fitur.
 - Database lokal bersih dari rekaman seed demo. Kategori konfigurasi tetap tersimpan.

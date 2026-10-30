@@ -1,0 +1,34 @@
+<article class="organizer-event" id="kegiatan-{{ activity.pk }}">
+  <div class="organizer-event-main">
+    <div class="organizer-event-title"><h3>{{ activity.nama }}</h3><span class="chip {% if activity.status_publikasi == 'published' %}ok{% elif activity.status_publikasi == 'draft' %}wait{% endif %}">{{ activity.status_display }}</span></div>
+    <p>{{ activity.deskripsi }}</p>
+    <div class="organizer-event-meta"><span>{{ activity.kategori.name }}</span><span>{{ activity.tanggal_mulai|date:'d/m/Y, H:i' }}</span><span>{{ activity.nama_lokasi }}{% if activity.kota %}, {{ activity.kota }}{% endif %}</span><span>Sisa kuota: {{ activity.sisa_kuota }} dari {{ activity.kuota }}</span></div>
+    {% if activity.status_publikasi == 'published' %}
+    <details class="organizer-applicants"><summary>Pendaftar relawan <span>{{ activity.application_count }}</span>{% if activity.pending_application_count %}<small>{{ activity.pending_application_count }} menunggu</small>{% endif %}</summary>
+      {% if activity.applications %}<div class="organizer-applicant-list">
+        {% for application in activity.applications %}
+        <article class="organizer-applicant">
+          <div><strong>{{ application.relawan.get_full_name|default:application.relawan.username }}</strong><span>{{ application.relawan.email }}{% if application.relawan.profile.city %} · {{ application.relawan.profile.city }}{% endif %}</span></div>
+          <span class="chip sm {% if application.status == 'ACCEPTED' or application.status == 'COMPLETED' %}ok{% elif application.status == 'PENDING' %}wait{% endif %}">{{ application.get_status_display }}</span>
+          {% if application.pesan %}<p class="organizer-review-note">Catatan: {{ application.pesan }}</p>{% endif %}
+          {% if application.status == 'PENDING' and not activity.event_is_over %}
+          <form method="post" action="{% url 'organizer:dashboard' %}" class="organizer-applicant-review">{% csrf_token %}<input type="hidden" name="action" value="update_application"><input type="hidden" name="application_id" value="{{ application.pk }}"><label class="sr" for="review-note-{{ application.pk }}">Catatan untuk relawan</label><textarea id="review-note-{{ application.pk }}" name="pesan" maxlength="500" rows="2" placeholder="Catatan untuk relawan (opsional)"></textarea><div class="organizer-applicant-actions"><button class="btn btn-ghost" type="submit" name="status" value="ACCEPTED">Terima</button><button class="btn btn-text" type="submit" name="status" value="REJECTED">Tolak</button></div></form>
+          {% elif application.status == 'ACCEPTED' and activity.event_is_over %}
+          <div class="organizer-applicant-actions"><form method="post" action="{% url 'organizer:dashboard' %}">{% csrf_token %}<input type="hidden" name="action" value="update_application"><input type="hidden" name="application_id" value="{{ application.pk }}"><input type="hidden" name="status" value="COMPLETED"><input type="hidden" name="jam_kontribusi" value="3"><button class="btn btn-ghost" type="submit">Tandai hadir</button></form><form method="post" action="{% url 'organizer:dashboard' %}">{% csrf_token %}<input type="hidden" name="action" value="update_application"><input type="hidden" name="application_id" value="{{ application.pk }}"><input type="hidden" name="status" value="ABSENT"><button class="btn btn-text" type="submit">Tandai tidak hadir</button></form></div>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>{% else %}<p class="organizer-applicant-empty">Belum ada relawan yang mendaftar.</p>{% endif %}
+    </details>
+    {% endif %}
+  </div>
+  <div class="organizer-event-actions">
+    {% if activity.status_publikasi == 'draft' %}
+      <a class="btn btn-ghost" href="{% url 'organizer:activities' %}?edit={{ activity.pk }}#form-kegiatan">Ubah</a>
+      <form method="post" action="{% url 'organizer:dashboard' %}">{% csrf_token %}<input type="hidden" name="action" value="delete_activity"><input type="hidden" name="activity_id" value="{{ activity.pk }}"><button class="btn btn-text" type="submit" onclick="return confirm('Hapus draft ini?')">Hapus</button></form>
+    {% elif activity.status_publikasi == 'published' %}
+      <a class="btn btn-ghost" href="{% url 'organizer:impact_detail' activity.pk %}">Laporan dampak{% if activity.has_impact %} ✓{% endif %}</a>
+    {% endif %}
+  </div>
+  {% if activity.status_publikasi == 'draft' %}<small class="organizer-review-note">Menunggu pemeriksaan admin sebelum diterbitkan.</small>{% elif activity.status_publikasi == 'published' %}<small class="organizer-review-note">{% if activity.event_is_over %}{% if activity.has_impact %}Laporan dampak telah dicatat.{% else %}Kegiatan selesai; laporan dampak dapat dicatat.{% endif %}{% else %}Kegiatan sudah dapat ditemukan dan diikuti relawan.{% endif %}</small>{% else %}<small class="organizer-review-note">Kegiatan diarsipkan oleh admin.</small>{% endif %}
+</article>

@@ -219,12 +219,12 @@ class LoginForm(AuthenticationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["username"].label = "Email"
+        self.fields["username"].label = "Email atau username"
         self.fields["username"].widget.attrs.update(
             {
                 "id": "l-email",
                 "autocomplete": "username",
-                "placeholder": "Masukkan email",
+                "placeholder": "Masukkan email atau username",
             }
         )
         self.fields["password"].widget.attrs.update(

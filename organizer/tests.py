@@ -90,18 +90,51 @@ class OrganizerDashboardIntegrationTest(TestCase):
         self.url = reverse("organizer:dashboard")
         self.client.force_login(self.user)
 
-    def test_dashboard_shows_owned_event_tools_and_shared_categories(self):
+    def test_activity_page_only_shows_create_form_and_shared_categories(self):
+        Kegiatan.objects.create(
+            organizer=self.user, nama="Kegiatan lama", deskripsi="Aksi warga",
+            kategori=self.category, tanggal_mulai=timezone.now() + timedelta(days=1),
+            nama_lokasi="Depok", kuota=10,
+        )
         response = self.client.get(reverse("organizer:activities"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Buat kegiatan")
         self.assertContains(response, "Urban farming")
-        self.assertContains(response, 'id="dampak"')
+        self.assertNotContains(response, "Kegiatan lama")
+        self.assertNotContains(response, 'id="dampak"')
+
+    def test_summary_groups_all_owned_activities_by_status(self):
+        for name, status in [
+            ("Menunggu aksi", Kegiatan.StatusPublikasi.DRAFT),
+            ("Aksi terbit", Kegiatan.StatusPublikasi.PUBLISHED),
+            ("Aksi arsip", Kegiatan.StatusPublikasi.ARCHIVED),
+        ]:
+            Kegiatan.objects.create(
+                organizer=self.user, nama=name, deskripsi="Aksi warga",
+                kategori=self.category, tanggal_mulai=timezone.now() + timedelta(days=1),
+                nama_lokasi="Depok", kuota=10, status_publikasi=status,
+            )
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Menunggu aksi")
+        self.assertContains(response, "Aksi terbit")
+        self.assertContains(response, "Aksi arsip")
+        self.assertEqual([a["nama"] for a in response.context["pending_activities"]], ["Menunggu aksi"])
+        self.assertEqual([a["nama"] for a in response.context["published_activities"]], ["Aksi terbit"])
+        self.assertEqual([a["nama"] for a in response.context["archived_activities"]], ["Aksi arsip"])
+        self.assertContains(response, "Menu profil penyelenggara")
 
     def test_activity_form_offers_default_environment_categories(self):
         response = self.client.get(reverse("organizer:activities"))
         self.assertContains(response, "Pengelolaan Sampah")
         self.assertContains(response, "Penanaman Mangrove")
         self.assertContains(response, "Pertanian Perkotaan")
+
+    def test_profile_settings_keeps_organizer_navigation_and_avatar_menu(self):
+        response = self.client.get(reverse("main:profile_settings"))
+        self.assertContains(response, "Navigasi penyelenggara")
+        self.assertContains(response, "Menu profil penyelenggara")
+        self.assertContains(response, "Set Password")
 
     def test_organizer_can_save_activity_as_admin_review_draft(self):
         event_time = timezone.localtime(timezone.now() + timedelta(days=3)).strftime("%Y-%m-%dT%H:%M")
@@ -111,10 +144,11 @@ class OrganizerDashboardIntegrationTest(TestCase):
             "tanggal_mulai": event_time, "nama_lokasi": "Kebun UI", "alamat": "Depok",
             "kota": "Depok", "latitude": "", "longitude": "", "kuota": 15,
         })
-        self.assertRedirects(response, f'{reverse("organizer:activities")}#lowongan', fetch_redirect_response=False)
+        self.assertRedirects(response, f'{self.url}#menunggu', fetch_redirect_response=False)
         event = Kegiatan.objects.get(nama="Kebun Akhir Pekan")
         self.assertEqual(event.organizer, self.user)
         self.assertEqual(event.status_publikasi, Kegiatan.StatusPublikasi.DRAFT)
+        self.assertContains(self.client.get(self.url), "Kebun Akhir Pekan")
 
     def test_organizer_can_record_impact_after_published_event(self):
         event = Kegiatan.objects.create(
@@ -123,13 +157,14 @@ class OrganizerDashboardIntegrationTest(TestCase):
             nama_lokasi="Depok", kuota=10,
             status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
         )
-        response = self.client.post(self.url, {
-            "action": "save_impact", "activity_id": event.pk,
+        impact_url = reverse("organizer:impact_detail", args=[event.pk])
+        response = self.client.post(impact_url, {
             "sampah_terkumpul_kg": "12.50", "pohon_ditanam": "4",
             "area_dibersihkan_m2": "80", "catatan": "Warga ikut berpartisipasi.",
         })
-        self.assertRedirects(response, f'{reverse("organizer:activities")}#dampak', fetch_redirect_response=False)
+        self.assertRedirects(response, impact_url, fetch_redirect_response=False)
         self.assertEqual(event.dampak.sampah_terkumpul_kg, Decimal("12.50"))
+        self.assertContains(self.client.get(self.url), impact_url)
 
     def test_invalid_impact_stays_on_report_form(self):
         event = Kegiatan.objects.create(
@@ -138,15 +173,38 @@ class OrganizerDashboardIntegrationTest(TestCase):
             nama_lokasi="Depok", kuota=10,
             status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
         )
-        response = self.client.post(reverse("organizer:activities"), {
-            "action": "save_impact", "activity_id": event.pk,
+        response = self.client.post(reverse("organizer:impact_detail", args=[event.pk]), {
             "sampah_terkumpul_kg": "-1", "pohon_ditanam": "0",
             "area_dibersihkan_m2": "0", "catatan": "",
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'id="dampak"')
+        self.assertContains(response, "Laporan dampak")
         self.assertContains(response, "Sampah terkumpul")
         self.assertFalse(DampakKegiatan.objects.filter(kegiatan=event).exists())
+
+    def test_impact_report_is_independent_and_limited_to_own_activity(self):
+        first = Kegiatan.objects.create(
+            organizer=self.user, nama="Aksi satu", deskripsi="Aksi warga",
+            kategori=self.category, tanggal_mulai=timezone.now() - timedelta(days=1),
+            nama_lokasi="Depok", kuota=10, status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
+        )
+        second = Kegiatan.objects.create(
+            organizer=self.user, nama="Aksi dua", deskripsi="Aksi warga",
+            kategori=self.category, tanggal_mulai=timezone.now() - timedelta(days=1),
+            nama_lokasi="Depok", kuota=10, status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
+        )
+        other_user = get_user_model().objects.create_user("other-organizer", password="safe-password")
+        other = Kegiatan.objects.create(
+            organizer=other_user, nama="Aksi orang lain", deskripsi="Aksi warga",
+            kategori=self.category, tanggal_mulai=timezone.now() - timedelta(days=1),
+            nama_lokasi="Depok", kuota=10, status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
+        )
+        data = {"sampah_terkumpul_kg": "5", "pohon_ditanam": "1", "area_dibersihkan_m2": "10", "catatan": "Selesai"}
+        self.client.post(reverse("organizer:impact_detail", args=[first.pk]), data)
+        self.assertTrue(DampakKegiatan.objects.filter(kegiatan=first).exists())
+        self.assertFalse(DampakKegiatan.objects.filter(kegiatan=second).exists())
+        self.assertEqual(self.client.get(reverse("organizer:impact_detail", args=[other.pk])).status_code, 404)
+        self.assertEqual(self.client.post(reverse("organizer:impact_detail", args=[other.pk]), data).status_code, 404)
 
     def test_organizer_can_accept_and_reject_volunteer_application(self):
         volunteer = get_user_model().objects.create_user(
@@ -165,13 +223,13 @@ class OrganizerDashboardIntegrationTest(TestCase):
             relawan=volunteer, kegiatan=event, motivasi="Ingin membantu",
             kontak_darurat="081234567891",
         )
-        url = reverse("organizer:activities")
+        url = self.url
 
         accepted = self.client.post(url, {
             "action": "update_application", "application_id": application.pk,
             "status": PendaftaranRelawan.Status.ACCEPTED, "pesan": "Sampai jumpa!",
         })
-        self.assertRedirects(accepted, f"{url}#lowongan", fetch_redirect_response=False)
+        self.assertRedirects(accepted, f"{url}#kegiatan-{event.pk}", fetch_redirect_response=False)
         application.refresh_from_db()
         self.assertEqual(application.status, PendaftaranRelawan.Status.ACCEPTED)
         self.assertEqual(application.pesan, "Sampai jumpa!")
@@ -180,7 +238,7 @@ class OrganizerDashboardIntegrationTest(TestCase):
             "action": "update_application", "application_id": application.pk,
             "status": PendaftaranRelawan.Status.REJECTED, "pesan": "Maaf, kuota berubah.",
         })
-        self.assertRedirects(rejected, f"{url}#lowongan", fetch_redirect_response=False)
+        self.assertRedirects(rejected, f"{url}#kegiatan-{event.pk}", fetch_redirect_response=False)
         application.refresh_from_db()
         self.assertEqual(application.status, PendaftaranRelawan.Status.REJECTED)
         self.assertEqual(application.pesan, "Maaf, kuota berubah.")
@@ -200,12 +258,12 @@ class OrganizerDashboardIntegrationTest(TestCase):
             kontak_darurat="081234567891",
             status=PendaftaranRelawan.Status.ACCEPTED,
         )
-        url = reverse("organizer:activities")
+        url = self.url
 
         response = self.client.post(url, {
             "action": "update_application", "application_id": application.pk,
             "status": PendaftaranRelawan.Status.ABSENT,
         })
-        self.assertRedirects(response, f"{url}#lowongan", fetch_redirect_response=False)
+        self.assertRedirects(response, f"{url}#kegiatan-{event.pk}", fetch_redirect_response=False)
         application.refresh_from_db()
         self.assertEqual(application.status, PendaftaranRelawan.Status.ABSENT)

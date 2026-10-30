@@ -1,7 +1,19 @@
 (() => {
   const element = document.getElementById("activity-map");
   const dataElement = document.getElementById("activity-map-markers");
-  if (!element || !dataElement || !window.L) return;
+  if (!element || !dataElement) return;
+
+  const fallback = document.getElementById("activity-map-fallback");
+  const errorMessage = document.getElementById("activity-map-error");
+  function showFallback() {
+    element.hidden = true;
+    if (fallback) fallback.hidden = false;
+    if (errorMessage) errorMessage.hidden = false;
+  }
+  if (!window.L) {
+    showFallback();
+    return;
+  }
 
   let markers = [];
   try {
@@ -11,9 +23,21 @@
   }
 
   const map = L.map(element, { scrollWheelZoom: false }).setView([-2.5, 118], 5);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  const emptyTile = "data:image/svg+xml," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#e8efeb"/></svg>'
+  );
+  let tileErrors = 0;
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap contributors",
+    referrerPolicy: "strict-origin-when-cross-origin",
+    errorTileUrl: emptyTile,
+  }).on("tileerror", () => {
+    tileErrors += 1;
+    if (tileErrors === 2) {
+      map.remove();
+      showFallback();
+    }
   }).addTo(map);
 
   const points = [];

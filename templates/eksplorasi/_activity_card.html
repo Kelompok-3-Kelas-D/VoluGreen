@@ -1,3 +1,4 @@
+{% load l10n %}
 <article class="explore-card card{% if activity.is_past %} explore-card--past{% endif %}">
   <div class="explore-card-top">
     <span class="chip sm">{{ activity.kategori.name }}</span>
@@ -13,7 +14,7 @@
     <div><dt>Lokasi</dt><dd>{{ activity.nama_lokasi }}{% if activity.kota %}, {{ activity.kota }}{% endif %}</dd></div>
     <div><dt>{% if activity.is_past %}Kuota{% else %}Sisa kuota{% endif %}</dt><dd>{% if activity.is_past %}{{ activity.kuota }}{% else %}{{ activity.available_spots }} dari {{ activity.kuota }}{% endif %} relawan</dd></div>
   </dl>
-  <a class="explore-map-link" href="{% if activity.punya_koordinat %}https://www.openstreetmap.org/?mlat={{ activity.latitude }}&amp;mlon={{ activity.longitude }}#map=16/{{ activity.latitude }}/{{ activity.longitude }}{% else %}https://www.openstreetmap.org/search?query={{ activity.nama_lokasi|add:' '|add:activity.kota|urlencode }}{% endif %}" target="_blank" rel="noopener noreferrer">Lihat lokasi di OpenStreetMap <span aria-hidden="true">↗</span></a>
+  <a class="explore-map-link" href="{% if activity.punya_koordinat %}https://www.openstreetmap.org/?mlat={{ activity.latitude|unlocalize }}&amp;mlon={{ activity.longitude|unlocalize }}#map=16/{{ activity.latitude|unlocalize }}/{{ activity.longitude|unlocalize }}{% else %}https://www.openstreetmap.org/search?query={{ activity.nama_lokasi|add:' '|add:activity.kota|urlencode }}{% endif %}" target="_blank" rel="noopener noreferrer">Lihat lokasi di OpenStreetMap <span aria-hidden="true">↗</span></a>
   <div class="explore-card-actions">
     {% if activity.is_past %}
       <span class="explore-ended-status">Waktu mulai sudah lewat; pendaftaran ditutup.</span>

@@ -1,0 +1,14 @@
+<header class="organizer-top">
+  <div class="wrap organizer-top-inner">
+    <a class="logo" href="{% url 'main:home' %}"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></span>VoluGreen</a>
+    <nav aria-label="Navigasi penyelenggara">
+      <a href="{% url 'organizer:dashboard' %}"{% if page == 'overview' %} aria-current="page"{% endif %}>Ringkasan</a>
+      <a href="{% url 'organizer:activities' %}"{% if page == 'activities' %} aria-current="page"{% endif %}>Kegiatan</a>
+      <a href="{% url 'main:profile_settings' %}">Profil</a>
+    </nav>
+    <div class="app-tools organizer-tools"><details class="profile-dropdown">
+      <summary aria-label="Menu profil penyelenggara" title="Menu profil"><span class="me">{{ profile.organization_name|default:request.user.username|slice:':2'|upper }}</span><span class="profile-chevron" aria-hidden="true">⌄</span></summary>
+      <div class="profile-dropdown-menu"><a href="{% url 'main:profile_settings' %}">Lihat Profil</a><a href="{% url 'main:profile_settings' %}#keamanan">Set Password</a><a class="profile-logout" href="{% url 'main:logout' %}">Keluar</a></div>
+    </details></div>
+  </div>
+</header>

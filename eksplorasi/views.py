@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -9,13 +10,13 @@ from django.utils.dateparse import parse_date
 from django.utils.formats import date_format
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+from urllib.parse import urlsplit, urlunsplit
 
 from main.models import Category
 from organizer.models import Kegiatan
 from volunteer.models import PendaftaranRelawan, STATUS_MENGISI_KUOTA
 
-from .forms import KoleksiForm
-from .models import KoleksiKegiatan
+from .models import ArsipKegiatan
 
 PUBLISHED = Kegiatan.StatusPublikasi.PUBLISHED
 
@@ -30,16 +31,10 @@ def index(request):
     kegiatan_sebelumnya = [item for item in semua_kegiatan if item.tanggal_mulai < sekarang]
     markers = data_marker(kegiatan_list)
     saved_ids = set()
-    saved_collections = {}
-    collection_list = []
     if request.user.is_authenticated:
-        collection_list = list(request.user.koleksi.all())
-        saved_rows = KoleksiKegiatan.objects.filter(
-            pengguna=request.user, kegiatan__in=kegiatan_list
-        ).values_list("kegiatan__pk", "pk")
-        for activity_id, collection_id in saved_rows:
-            saved_ids.add(activity_id)
-            saved_collections.setdefault(activity_id, set()).add(collection_id)
+        saved_ids = set(ArsipKegiatan.objects.filter(
+            pengguna=request.user, kegiatan__in=semua_kegiatan
+        ).values_list("kegiatan_id", flat=True))
     reserved = dict(
         PendaftaranRelawan.objects.filter(kegiatan__in=kegiatan_list, status__in=STATUS_MENGISI_KUOTA)
         .values("kegiatan_id").annotate(total=Count("pk")).values_list("kegiatan_id", "total")
@@ -52,9 +47,10 @@ def index(request):
     for item in kegiatan_list:
         item.available_spots = max(item.kuota - reserved.get(item.pk, 0), 0)
         item.is_saved = item.pk in saved_ids
-        item.saved_collection_ids = saved_collections.get(item.pk, set())
         item.application_status = statuses.get(item.pk, "")
         item.application_status_display = labels.get(item.application_status, "")
+    for item in kegiatan_sebelumnya:
+        item.is_saved = item.pk in saved_ids
     cities = sorted({item.kota for item in Kegiatan.objects.filter(status_publikasi=PUBLISHED, tanggal_mulai__gte=timezone.now()).exclude(kota="").only("kota")})
     return render(request, "eksplorasi/index.html", {
         "activities": kegiatan_list, "past_activities": kegiatan_sebelumnya, "markers": markers,
@@ -62,7 +58,6 @@ def index(request):
         "categories": Category.objects.filter(is_active=True), "cities": cities,
         "query": nilai["q"], "selected_city": nilai["kota"], "selected_category": nilai["kategori"],
         "date_from": nilai["dari"], "date_to": nilai["sampai"],
-        "collection_list": collection_list,
         "volunteer_initials": request.user.get_username()[:2].upper() if profile and profile.role == "volunteer" else "",
     })
 
@@ -167,22 +162,39 @@ def detail_kegiatan(request, pk):
         kegiatan=kegiatan, status__in=STATUS_MENGISI_KUOTA
     ).count()
     kegiatan.available_spots = max(kegiatan.kuota - pendaftaran_aktif, 0)
+    kegiatan.is_past = kegiatan.tanggal_mulai <= timezone.now()
+    back_url = request.GET.get("kembali", "")
+    try:
+        parsed_back_url = urlsplit(back_url)
+    except ValueError:
+        parsed_back_url = None
+    if (not parsed_back_url or parsed_back_url.path != reverse("eksplorasi:index")
+            or not url_has_allowed_host_and_scheme(
+                back_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            )):
+        back_url = reverse("eksplorasi:index")
+    else:
+        back_url = urlunsplit((parsed_back_url.scheme, parsed_back_url.netloc,
+                              parsed_back_url.path, parsed_back_url.query, ""))
 
-    koleksi_list = []
-    if request.user.is_authenticated:
-        tersimpan = set(
-            KoleksiKegiatan.objects.filter(
-                pengguna=request.user, kegiatan=kegiatan
-            ).values_list("pk", flat=True)
-        )
-        koleksi_list = list(request.user.koleksi.all())
-        for k in koleksi_list:
-            k.ada = k.pk in tersimpan
+    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
+    application = None
+    if profile and profile.role == "volunteer":
+        application = PendaftaranRelawan.objects.filter(
+            relawan=request.user, kegiatan=kegiatan
+        ).first()
+
+    is_archived = bool(
+        profile and profile.role == "volunteer" and ArsipKegiatan.objects.filter(
+            pengguna=request.user, kegiatan=kegiatan
+        ).exists()
+    )
 
     return render(
         request,
         "eksplorasi/detail.html",
-        {"kegiatan": kegiatan, "peta": peta, "koleksi_list": koleksi_list},
+        {"kegiatan": kegiatan, "peta": peta, "is_archived": is_archived,
+         "application": application, "back_url": back_url},
     )
 
 
@@ -193,78 +205,40 @@ def api_kegiatan(request):
     return JsonResponse({"count": len(data), "results": data})
 
 
-@login_required
-def koleksi_daftar(request):
-    koleksi_list = request.user.koleksi.annotate(jumlah=Count("kegiatan"))
-    return render(request, "eksplorasi/koleksi_daftar.html", {"koleksi_list": koleksi_list})
-
-
-@login_required
-def koleksi_buat(request):
-    form = KoleksiForm(request.POST or None, user=request.user)
-    if request.method == "POST" and form.is_valid():
-        koleksi = form.save(commit=False)
-        koleksi.pengguna = request.user
-        koleksi.save()
-        messages.success(request, f"Koleksi “{koleksi.nama}” berhasil dibuat.")
-        return redirect("eksplorasi:koleksi_detail", pk=koleksi.pk)
-    return render(
-        request,
-        "eksplorasi/koleksi_form.html",
-        {"form": form, "judul": "Buat koleksi baru", "tombol": "Buat koleksi"},
+@login_required(login_url="/login/")
+def arsip_daftar(request):
+    profile = getattr(request.user, "profile", None)
+    if profile is None or profile.role != "volunteer":
+        raise PermissionDenied("Arsip kegiatan hanya tersedia untuk akun relawan.")
+    archives = ArsipKegiatan.objects.filter(pengguna=request.user).select_related(
+        "kegiatan", "kegiatan__kategori"
     )
+    return render(request, "eksplorasi/arsip.html", {
+        "archives": archives,
+        "volunteer_initials": request.user.get_username()[:2].upper(),
+    })
 
 
-@login_required
-def koleksi_detail(request, pk):
-    koleksi = get_object_or_404(KoleksiKegiatan, pk=pk, pengguna=request.user)
-    kegiatan_list = koleksi.kegiatan.select_related("kategori")
-    return render(
-        request,
-        "eksplorasi/koleksi_detail.html",
-        {"koleksi": koleksi, "kegiatan_list": kegiatan_list},
-    )
-
-
-@login_required
-def koleksi_edit(request, pk):
-    koleksi = get_object_or_404(KoleksiKegiatan, pk=pk, pengguna=request.user)
-    form = KoleksiForm(request.POST or None, instance=koleksi, user=request.user)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Koleksi berhasil diperbarui.")
-        return redirect("eksplorasi:koleksi_detail", pk=koleksi.pk)
-    return render(
-        request,
-        "eksplorasi/koleksi_form.html",
-        {"form": form, "judul": "Ubah koleksi", "tombol": "Simpan perubahan"},
-    )
-
-
-@login_required
-def koleksi_hapus(request, pk):
-    koleksi = get_object_or_404(KoleksiKegiatan, pk=pk, pengguna=request.user)
-    if request.method == "POST":
-        nama = koleksi.nama
-        koleksi.delete()
-        messages.success(request, f"Koleksi “{nama}” dihapus.")
-        return redirect("eksplorasi:koleksi_daftar")
-    return render(request, "eksplorasi/koleksi_hapus.html", {"koleksi": koleksi})
-
-
-@login_required
+@login_required(login_url="/login/")
 @require_POST
-def koleksi_toggle(request, pk, kegiatan_pk):
-    """Tambah kegiatan ke koleksi, atau keluarkan kalau sudah ada."""
-    koleksi = get_object_or_404(KoleksiKegiatan, pk=pk, pengguna=request.user)
+def arsip_toggle(request, kegiatan_pk):
+    profile = getattr(request.user, "profile", None)
+    if profile is None or profile.role != "volunteer":
+        raise PermissionDenied("Arsip kegiatan hanya tersedia untuk akun relawan.")
 
-    if koleksi.kegiatan.filter(pk=kegiatan_pk).exists():
-        koleksi.kegiatan.remove(kegiatan_pk)
-        messages.info(request, f"Kegiatan dikeluarkan dari “{koleksi.nama}”.")
+    archived = ArsipKegiatan.objects.filter(
+        pengguna=request.user, kegiatan_id=kegiatan_pk
+    ).first()
+    if archived:
+        archived.delete()
+        messages.info(request, "Kegiatan dihapus dari arsip pribadimu.")
     else:
         kegiatan = get_object_or_404(Kegiatan, pk=kegiatan_pk, status_publikasi=PUBLISHED)
-        koleksi.kegiatan.add(kegiatan)
-        messages.success(request, f"Kegiatan ditambahkan ke “{koleksi.nama}”.")
+        ArsipKegiatan.objects.get_or_create(pengguna=request.user, kegiatan=kegiatan)
+        messages.success(request, "Kegiatan tersimpan di arsip pribadimu.")
+    return redirect(url_valid(request, reverse("eksplorasi:arsip_daftar")))
 
-    koleksi.save(update_fields=["diperbarui_pada"])
-    return redirect(url_valid(request, reverse("eksplorasi:koleksi_detail", args=[pk])))
+
+@login_required(login_url="/login/")
+def koleksi_legacy_redirect(request, old_path=None):
+    return redirect("eksplorasi:arsip_daftar")

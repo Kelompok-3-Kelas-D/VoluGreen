@@ -37,7 +37,7 @@
       <div class="app-tools">
         <details class="profile-dropdown">
           <summary aria-label="Menu profil" title="Menu profil"><span class="me">{{ inisial_relawan }}</span><span class="profile-chevron" aria-hidden="true">⌄</span></summary>
-          <div class="profile-dropdown-menu"><a href="{% url 'main:profile_settings' %}">Lihat Profil</a><a href="{% url 'main:profile_settings' %}#keamanan">Set Password</a><a class="profile-logout" href="{% url 'main:logout' %}">Keluar</a></div>
+          <div class="profile-dropdown-menu"><a href="{% url 'main:profile_settings' %}">Lihat Profil</a><a href="{% url 'eksplorasi:arsip_daftar' %}">Arsip kegiatan</a><a href="{% url 'main:profile_settings' %}#keamanan">Set Password</a><a class="profile-logout" href="{% url 'main:logout' %}">Keluar</a></div>
         </details>
         <button class="app-menu" type="button" aria-label="Buka navigasi relawan" aria-expanded="false" aria-controls="volunteer-mobile-menu" data-drawer="volunteer-mobile-menu">☰</button>
       </div>
@@ -45,6 +45,7 @@
         <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
         <a href="{% url 'volunteer:halaman_dashboard_relawan' %}" aria-current="page">List kegiatan</a>
         <a href="{% url 'main:profile_settings' %}">Profil</a>
+        <a href="{% url 'eksplorasi:arsip_daftar' %}">Arsip kegiatan</a>
       </div>
     </div>
   </header>
