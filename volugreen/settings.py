@@ -154,7 +154,7 @@ STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {
         'BACKEND': (
-            'whitenoise.storage.CompressedManifestStaticFilesStorage'
+            'whitenoise.storage.CompressedStaticFilesStorage'
             if PRODUCTION else 'django.contrib.staticfiles.storage.StaticFilesStorage'
         )
     },
