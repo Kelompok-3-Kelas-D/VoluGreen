@@ -14,3 +14,14 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'volugreen.settings')
 
 application = get_wsgi_application()
+
+
+def _ensure_initial_data():
+    try:
+        from django.core.management import call_command
+        call_command('seed_initial_activities')
+    except Exception as exc:
+        print(f"[WSGI BOOT] Seed failed: {exc}")
+
+
+_ensure_initial_data()
