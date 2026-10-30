@@ -21,8 +21,7 @@
         {% if request.user.is_authenticated and request.user.profile.role == 'volunteer' %}
           <a href="{% url 'eksplorasi:index' %}" aria-current="page">Cari kegiatan</a>
           <a href="{% url 'volunteer:halaman_dashboard_relawan' %}">List kegiatan</a>
-          <a href="{% url 'eksplorasi:koleksi_daftar' %}">Koleksi</a>
-          <a href="{% url 'main:profile_settings' %}">Profil</a>
+                    <a href="{% url 'main:profile_settings' %}">Profil</a>
         {% elif request.user.is_authenticated %}
           <a href="{% url 'eksplorasi:index' %}" aria-current="page">Cari kegiatan</a>
           <a href="{% url 'organizer:dashboard' %}">Dashboard</a>
