@@ -5,8 +5,6 @@
 .explore-top nav a,.explore-top nav button{position:relative;color:var(--ink-2);font-weight:700;text-decoration:none;white-space:nowrap}
 .explore-top nav a:hover,.explore-top nav a[aria-current=page]{color:var(--green)}
 .explore-top nav a[aria-current=page]:after{position:absolute;right:0;bottom:-27px;left:0;height:4px;border-radius:4px 4px 0 0;background:var(--yellow);content:""}
-.volunteer-explore-top-inner .app-nav{display:flex;min-width:0}
-@media(max-width:960px){.volunteer-explore-top-inner{flex-wrap:wrap;gap:8px 16px;padding-block:10px}.volunteer-explore-top-inner .app-nav{order:3;width:100%;margin:0;gap:18px;overflow-x:auto;padding:2px 0 5px;scrollbar-width:thin}.volunteer-explore-top-inner .app-tools{margin-left:auto}}
 .explore-register{padding:9px 16px;border:1px solid var(--line);cursor:pointer}
 .explore-top nav .explore-login{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 17px;border:1px solid var(--green);border-radius:999px;background:var(--green);color:#fff;font-weight:800}
 .explore-top nav .explore-login:hover{background:var(--green-deep);color:#fff}
