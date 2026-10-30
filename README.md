@@ -44,6 +44,8 @@ Melalui VoluGreen:
 
 **Situs deployment PWS:** [rayhan-fairuz51-volugreen.pws.cs.ui.ac.id](https://rayhan-fairuz51-volugreen.pws.cs.ui.ac.id/)
 
+**Link desain Figma:** [VoluGreen UI/UX Design](https://www.figma.com/design/ffTeu2AFsZg3GF3bK5UDJX/VoluGreen---UI-UX-Design?node-id=0-1&t=Jga5XjoTVnDYRJxK-1)
+
 ---
 
 ## 🧩 Daftar Modul (Rencana)
