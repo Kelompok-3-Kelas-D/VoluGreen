@@ -19,7 +19,11 @@
         <a class="logo on-dark" href="#beranda" aria-label="VoluGreen, beranda"><span class="logo-mark" data-i="leaf"></span>VoluGreen</a>
         <nav aria-label="Navigasi utama">
           <a href="#beranda" aria-current="page">Beranda</a>
-          <a href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan</a>
+          {% if user.is_authenticated and user.profile.role == 'volunteer' %}
+            <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
+          {% elif not user.is_authenticated %}
+            <a href="{% url 'main:register' %}?role=organizer">Jadi penyelenggara</a>
+          {% endif %}
           <a href="#tentang">Tentang kami</a>
           {% if user.is_staff %}
             <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
@@ -49,7 +53,11 @@
         <button class="menu-btn" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="beranda-menu" data-drawer="beranda-menu"><span data-i="menu"></span></button>
         <div class="mobile-drawer" id="beranda-menu" hidden>
           <a href="#beranda" aria-current="page">Beranda</a>
-          <a href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan</a>
+          {% if user.is_authenticated and user.profile.role == 'volunteer' %}
+            <a href="{% url 'eksplorasi:index' %}">Cari kegiatan</a>
+          {% elif not user.is_authenticated %}
+            <a href="{% url 'main:register' %}?role=organizer">Jadi penyelenggara</a>
+          {% endif %}
           <a href="#tentang">Tentang kami</a>
           {% if user.is_staff %}
             <a href="{% url 'admin_panel:dashboard' %}">Panel admin</a>
@@ -74,14 +82,17 @@
         <h1>Aksi kecil hari ini, <em>bumi lebih hijau</em> esok.</h1>
         <p class="lede">Temukan aksi bersih lingkungan, urban farming, dan penanaman pohon dari komunitas di kotamu.</p>
         <div class="landing-actions">
-          <a class="cta inline" href="{% if user.is_authenticated %}{% url 'eksplorasi:index' %}{% else %}{% url 'main:register' %}?role=volunteer&amp;next={% url 'eksplorasi:index' %}{% endif %}">Jelajahi kegiatan <span class="arrow" aria-hidden="true">↗</span></a>
           {% if user.is_staff %}
+            <a class="cta inline" href="{% url 'admin_panel:dashboard' %}">Buka panel admin <span class="arrow" aria-hidden="true">↗</span></a>
             <a class="btn btn-outline-light" href="{% url 'admin_panel:dashboard' %}">Buka panel admin</a>
           {% elif user.is_authenticated and user.profile.role == 'volunteer' %}
+            <a class="cta inline" href="{% url 'eksplorasi:index' %}">Cari kegiatan <span class="arrow" aria-hidden="true">↗</span></a>
             <a class="btn btn-outline-light" href="{% url 'volunteer:halaman_dashboard_relawan' %}">Pendaftaran saya</a>
           {% elif user.is_authenticated and user.profile.role == 'organizer' %}
+            <a class="cta inline" href="{% url 'organizer:dashboard' %}">Kelola kegiatan <span class="arrow" aria-hidden="true">↗</span></a>
             <a class="btn btn-outline-light" href="{% url 'organizer:dashboard' %}">Kelola kegiatan</a>
           {% else %}
+            <a class="cta inline" href="{% url 'main:register' %}?role=organizer">Daftar sebagai penyelenggara <span class="arrow" aria-hidden="true">↗</span></a>
             <a class="btn btn-outline-light" href="{% url 'main:register' %}?role=volunteer">Daftar sebagai relawan</a>
           {% endif %}
         </div>
@@ -89,9 +100,9 @@
       </div>
       <div class="hero-guide" aria-label="Langkah bergabung">
         <span class="hero-guide-label">MULAI AKSIMU</span>
-        <strong>Temukan kegiatan yang cocok denganmu.</strong>
-        <p>Lihat waktu, lokasi, dan sisa kuota sebelum mendaftar.</p>
-        <a href="{% url 'eksplorasi:index' %}">Lihat semua kegiatan <span aria-hidden="true">↗</span></a>
+        <strong>Mau mengajak relawan bergerak bersama?</strong>
+        <p>Daftarkan organisasimu dan kelola kegiatan lingkungan di VoluGreen.</p>
+        <a href="{% if user.is_authenticated and user.profile.role == 'organizer' %}{% url 'organizer:dashboard' %}{% else %}{% url 'main:register' %}?role=organizer{% endif %}">Daftar sebagai penyelenggara <span aria-hidden="true">↗</span></a>
       </div>
     </main>
     <p class="legal wrap">© 2026 VoluGreen · Kelompok 3 Kelas D</p>

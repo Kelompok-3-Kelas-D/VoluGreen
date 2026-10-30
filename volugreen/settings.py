@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 
 from dotenv import load_dotenv
 
@@ -28,10 +29,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
-    from django.core.management.utils import get_random_secret_key
-    SECRET_KEY = get_random_secret_key()
+    if PRODUCTION:
+        raise ImproperlyConfigured(
+            'DJANGO_SECRET_KEY must be configured when PRODUCTION=True.'
+        )
+    # Stable local-only key: sessions remain valid across development server restarts.
+    # Production must always provide a private key through the environment.
+    SECRET_KEY = 'volugreen-local-development-key-do-not-use-in-production'
 
-DEBUG = True  # TEMPORARY: to see actual error on PWS
+DEBUG = os.getenv('DEBUG', 'False' if PRODUCTION else 'True').lower() == 'true'
 ALLOWED_HOSTS = [host.strip() for host in os.getenv(
     'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],rayhan-fairuz51-volugreen.pws.cs.ui.ac.id'
 ).split(',') if host.strip()]

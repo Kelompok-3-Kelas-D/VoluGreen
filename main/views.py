@@ -91,15 +91,25 @@ def profile_settings(request):
     })
 
 
+def _role_home_url(user):
+    """Tentukan halaman awal berdasarkan profil akun, bukan tab login."""
+    if user.is_staff:
+        return reverse("admin_panel:dashboard")
+    profile = getattr(user, "profile", None)
+    if profile and profile.role == Profile.Role.ORGANIZER:
+        return reverse("organizer:dashboard")
+    return reverse("volunteer:halaman_dashboard_relawan")
+
+
 def register(request):
-    if request.user.is_authenticated:
-        return redirect("main:home")
     requested_role = request.GET.get("role")
     if requested_role not in Profile.Role.values:
         requested_role = Profile.Role.VOLUNTEER
     next_url = request.POST.get("next", "") if request.method == "POST" else request.GET.get("next", "")
     if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         next_url = ""
+    if request.user.is_authenticated:
+        return redirect(next_url or _role_home_url(request.user))
     form = RegistrationForm(request.POST or None, initial={"role": requested_role})
     if request.method == "POST" and form.is_valid():
         try:
@@ -123,8 +133,6 @@ def register(request):
 
 
 def login_user(request):
-    if request.user.is_authenticated:
-        return redirect("main:home")
     requested_role = request.GET.get("role", Profile.Role.VOLUNTEER)
     if requested_role not in Profile.Role.values:
         requested_role = Profile.Role.VOLUNTEER
@@ -135,20 +143,16 @@ def login_user(request):
     next_url = request.POST.get("next", "") if request.method == "POST" else request.GET.get("next", "")
     if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         next_url = ""
+    if request.user.is_authenticated:
+        return redirect(next_url or _role_home_url(request.user))
     form = LoginForm(request, data=request.POST or None, initial={"role": requested_role})
     if request.method == "POST" and form.is_valid():
         user = form.get_user()
         login(request, user)
-        selected_role = form.cleaned_data.get("role")
-        if not selected_role:
-            profile = getattr(user, "profile", None)
-            selected_role = profile.role if profile else Profile.Role.VOLUNTEER
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
             destination = next_url
-        elif selected_role == Profile.Role.ORGANIZER:
-            destination = reverse("organizer:dashboard")
         else:
-            destination = reverse("volunteer:halaman_dashboard_relawan")
+            destination = _role_home_url(user)
         response = redirect(destination)
         response.set_cookie("last_login", timezone.localtime().strftime("%Y-%m-%d %H:%M:%S"), samesite="Lax")
         return response

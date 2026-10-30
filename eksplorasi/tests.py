@@ -22,6 +22,17 @@ class PublishedActivityDirectoryTests(TestCase):
             phone_number="081234567890",
             organization_name="Komunitas Direktori",
         )
+        self.volunteer = get_user_model().objects.create_user(
+            username="directory-volunteer@example.test",
+            email="directory-volunteer@example.test",
+            password="test-password",
+        )
+        Profile.objects.create(
+            user=self.volunteer,
+            role=Profile.Role.VOLUNTEER,
+            phone_number="081234567891",
+            city="Depok",
+        )
         category = Category.objects.create(name="Kategori Direktori Uji")
         self.past_activity = Kegiatan.objects.create(
             organizer=organizer,
@@ -46,7 +57,16 @@ class PublishedActivityDirectoryTests(TestCase):
             status_publikasi=Kegiatan.StatusPublikasi.PUBLISHED,
         )
 
+    def test_anonymous_visitor_is_sent_to_login_before_exploration(self):
+        response = self.client.get(reverse("eksplorasi:index"))
+
+        self.assertRedirects(
+            response,
+            f"{reverse('main:login')}?next={reverse('eksplorasi:index')}",
+        )
+
     def test_published_past_activity_is_visible_without_registration_link(self):
+        self.client.force_login(self.volunteer)
         response = self.client.get(reverse("eksplorasi:index"))
 
         self.assertEqual(response.status_code, 200)
@@ -63,6 +83,7 @@ class PublishedActivityDirectoryTests(TestCase):
         )
 
     def test_city_filter_can_find_published_past_activity(self):
+        self.client.force_login(self.volunteer)
         response = self.client.get(reverse("eksplorasi:index"), {"kota": "Depok"})
 
         self.assertContains(response, "Kegiatan yang sudah dimulai")
