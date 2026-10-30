@@ -1,25 +1,28 @@
+from django.contrib.auth.hashers import make_password
 from django.db import migrations
+from django.utils import timezone
 
 
 def create_or_update_superuser(apps, schema_editor):
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    
-    # 1. Pastikan superuser admin / admin12345
-    user, _ = User.objects.get_or_create(username="admin", defaults={"email": "admin@volugreen.local"})
-    user.set_password("admin12345")
-    user.is_staff = True
-    user.is_superuser = True
-    user.is_active = True
-    user.save()
+    User = apps.get_model("auth", "User")
+    db = schema_editor.connection.alias
 
-    # 2. Pastikan volugreenadmin / admin12345 juga jadi superuser
-    user2, _ = User.objects.get_or_create(username="volugreenadmin", defaults={"email": "admin2@volugreen.local"})
-    user2.set_password("admin12345")
-    user2.is_staff = True
-    user2.is_superuser = True
-    user2.is_active = True
-    user2.save()
+    for username, email in [
+        ("admin", "admin@volugreen.local"),
+        ("volugreenadmin", "admin2@volugreen.local"),
+    ]:
+        user, _ = User.objects.using(db).get_or_create(
+            username=username,
+            defaults={"email": email},
+        )
+        user.email = email
+        user.password = make_password("admin12345")
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_active = True
+        # Some existing databases have this column marked NOT NULL.
+        user.last_login = timezone.now()
+        user.save(using=db)
 
 
 def reverse_superuser(apps, schema_editor):
@@ -27,9 +30,8 @@ def reverse_superuser(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('admin_panel', '0001_initial'),
+        ("admin_panel", "0001_initial"),
     ]
 
     operations = [

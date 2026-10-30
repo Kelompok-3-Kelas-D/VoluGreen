@@ -35,7 +35,7 @@ def index(request):
         collection_list = list(request.user.koleksi.all())
         saved_rows = KoleksiKegiatan.objects.filter(
             pengguna=request.user, kegiatan__in=kegiatan_list
-        ).values_list("kegiatan_id", "pk")
+        ).values_list("kegiatan__pk", "pk")
         for activity_id, collection_id in saved_rows:
             saved_ids.add(activity_id)
             saved_collections.setdefault(activity_id, set()).add(collection_id)
